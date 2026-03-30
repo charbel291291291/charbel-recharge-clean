@@ -14,7 +14,7 @@ export default defineConfig({
     }),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "logo-icon.svg", "cedarboost-logo.png"],
+      includeAssets: ["favicon.ico", "logo-icon.svg", "cedarboost-logo.png", "assets/hub_gaming.png", "assets/hub_smm.png", "assets/hub_wallet.png", "assets/whish-logo.png"],
       manifest: {
         name: "Cedar Boost",
         short_name: "CedarBoost",
