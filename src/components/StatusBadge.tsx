@@ -42,7 +42,7 @@ export default function StatusBadge({ status }: { status: string }) {
   const { t } = useLanguage();
   const config = statusConfig[status] || { labelKey: 'statusPending' as TranslationKey, className: '' };
   return (
-    <Badge variant="outline" className={`text-xs font-medium ${config.className}`}>
+    <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 ${config.className}`}>
       {t(config.labelKey)}
     </Badge>
   );

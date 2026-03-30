@@ -166,22 +166,28 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       </main>
 
       {/* MOBILE BOTTOM NAV — thumb zone, hidden on desktop */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#050505]/95 backdrop-blur-2xl border-t border-white/[0.06]">
-        <div className="flex items-stretch justify-around px-1 pt-1 pb-2">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.06]"
+        style={{ background: 'rgba(5,5,5,0.96)', backdropFilter: 'blur(24px) saturate(180%)' }}
+      >
+        <div className="flex items-stretch justify-around">
           {navItems.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to
             return (
               <Link
                 key={to}
                 to={to}
-                className={`flex flex-col items-center justify-center gap-0.5 py-2 flex-1 min-w-0 transition-all active:scale-95 ${
-                  active ? 'text-primary' : 'text-white/30'
+                className={`relative flex flex-col items-center justify-center gap-0.5 pt-2.5 pb-3 flex-1 min-w-0 select-none tap-feedback ${
+                  active ? 'text-primary' : 'text-white/28'
                 }`}
               >
-                <div className={`relative p-1.5 rounded-xl transition-all ${active ? 'bg-primary/15' : ''}`}>
-                  <Icon className="w-5 h-5" />
+                {/* Active top line */}
+                {active && (
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-[2px] rounded-b-full bg-primary" />
+                )}
+                <div className={`p-1 rounded-xl transition-all duration-200 ${active ? 'bg-primary/12' : ''}`}>
+                  <Icon className={`w-[18px] h-[18px] transition-all duration-200 ${active ? 'text-primary' : 'text-white/30'}`} strokeWidth={active ? 2.5 : 2} />
                 </div>
-                <span className={`text-[8px] font-black uppercase tracking-wide truncate max-w-[52px] px-0.5 ${active ? 'text-primary' : 'text-white/25'}`}>
+                <span className={`text-[8px] font-black uppercase tracking-wide truncate max-w-[52px] leading-none transition-all duration-200 ${active ? 'text-primary' : 'text-white/22'}`}>
                   {label}
                 </span>
               </Link>

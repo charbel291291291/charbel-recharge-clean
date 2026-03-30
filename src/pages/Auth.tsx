@@ -196,9 +196,9 @@ export default function Auth() {
             <p className="text-muted-foreground text-[10px] uppercase tracking-widest font-bold opacity-60">{isLogin ? t('signInToAccount') : t('getStarted')}</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <label htmlFor="auth-email" className="text-[10px] uppercase font-black tracking-widest text-white/40 ml-2">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label htmlFor="auth-email" className="text-[9px] uppercase font-black tracking-[0.25em] text-white/35 ml-1">
                 {t('email')}
               </label>
               <Input
@@ -208,11 +208,11 @@ export default function Auth() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-14 bg-white/5 border-white/5 rounded-2xl px-6 focus:ring-primary/20 transition-all font-bold"
+                className="h-13 bg-white/[0.04] border-white/[0.09] rounded-2xl px-5 font-bold text-sm input-premium focus-visible:ring-primary/20 transition-all"
               />
             </div>
-            <div className="space-y-2">
-              <label htmlFor="auth-password" className="text-[10px] uppercase font-black tracking-widest text-white/40 ml-2">
+            <div className="space-y-1.5">
+              <label htmlFor="auth-password" className="text-[9px] uppercase font-black tracking-[0.25em] text-white/35 ml-1">
                 {t('password')}
               </label>
               <Input
@@ -223,29 +223,29 @@ export default function Auth() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="h-14 bg-white/5 border-white/5 rounded-2xl px-6 focus:ring-primary/20 transition-all font-bold"
+                className="h-13 bg-white/[0.04] border-white/[0.09] rounded-2xl px-5 font-bold text-sm input-premium focus-visible:ring-primary/20 transition-all"
               />
             </div>
-            <Button type="submit" className="h-14 w-full bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all text-xs uppercase tracking-widest" disabled={loading}>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary-premium h-14 w-full text-white font-black rounded-2xl text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 tap-feedback disabled:opacity-60 disabled:pointer-events-none"
+            >
               {loading ? <Loader className="w-5 h-5 animate-spin" /> : isLogin ? t('signIn') : t('signUp')}
-            </Button>
+            </button>
           </form>
 
           {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10"></div>
-            </div>
-            <div className="relative flex justify-center text-[8px] uppercase tracking-widest font-bold">
-              <span className="bg-transparent px-4 text-muted-foreground">{t('orContinueWith')}</span>
-            </div>
+          <div className="relative flex items-center gap-3">
+            <div className="flex-1 divider-fade" />
+            <span className="text-[8px] uppercase tracking-[0.3em] font-black text-white/25 shrink-0">{t('orContinueWith')}</span>
+            <div className="flex-1 divider-fade" />
           </div>
 
           {/* Google Sign-In Button */}
-          <Button
+          <button
             type="button"
-            variant="outline"
-            className="h-14 w-full bg-white/5 border-white/10 text-white font-black rounded-2xl hover:bg-white/10 active:scale-[0.98] transition-all text-xs uppercase tracking-widest gap-3"
+            className="h-13 w-full bg-white/[0.04] border border-white/[0.09] text-white/70 hover:text-white hover:bg-white/[0.08] font-black rounded-2xl text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all tap-feedback"
             onClick={async () => {
               const { error } = await signInWithGoogle()
               if (error) {
@@ -253,9 +253,9 @@ export default function Auth() {
               }
             }}
           >
-            <Chrome className="w-5 h-5" />
+            <Chrome className="w-4 h-4" />
             {t('signInWithGoogle')}
-          </Button>
+          </button>
 
           {isLogin && (
             <div className="text-center">

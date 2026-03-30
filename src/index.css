@@ -273,6 +273,142 @@
   .gradient-card {
     background: linear-gradient(145deg, hsl(230, 45%, 12%), hsl(230, 45%, 8%));
   }
+
+  /* ── Premium Balance Display ─────────────────────── */
+  .balance-display {
+    background: linear-gradient(160deg, #ffffff 0%, rgba(255,255,255,0.75) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 12px rgba(255,255,255,0.06));
+  }
+
+  /* ── Card Lift (desktop hover) ───────────────────── */
+  .card-lift {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .card-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 28px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+
+  /* ── Premium Recharge CTA ────────────────────────── */
+  .btn-recharge {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    box-shadow: 0 8px 32px rgba(5,150,105,0.4), inset 0 1px 0 rgba(255,255,255,0.12) !important;
+    transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: none !important;
+  }
+  .btn-recharge:hover {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    box-shadow: 0 12px 48px rgba(5,150,105,0.55), inset 0 1px 0 rgba(255,255,255,0.18) !important;
+    transform: translateY(-1px) !important;
+  }
+  .btn-recharge:active {
+    transform: scale(0.97) translateY(0) !important;
+    box-shadow: 0 4px 12px rgba(5,150,105,0.3) !important;
+    transition-duration: 0.05s !important;
+  }
+
+  /* ── Tap Feedback (mobile-first) ─────────────────── */
+  .tap-feedback {
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.08s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.08s ease;
+    cursor: pointer;
+  }
+  .tap-feedback:active {
+    transform: scale(0.96);
+    opacity: 0.82;
+  }
+
+  /* ── Transaction icons ───────────────────────────── */
+  .tx-icon-credit {
+    background: linear-gradient(135deg, rgba(16,185,129,0.14) 0%, rgba(16,185,129,0.06) 100%);
+    border: 1px solid rgba(16,185,129,0.18);
+    box-shadow: 0 0 20px rgba(16,185,129,0.07);
+    color: #10b981;
+  }
+  .tx-icon-debit {
+    background: linear-gradient(135deg, rgba(239,68,68,0.14) 0%, rgba(239,68,68,0.06) 100%);
+    border: 1px solid rgba(239,68,68,0.18);
+    box-shadow: 0 0 20px rgba(239,68,68,0.07);
+    color: #ef4444;
+  }
+  .tx-icon-neutral {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.3);
+  }
+
+  /* ── Nav bottom tab active line ──────────────────── */
+  .nav-tab-active {
+    position: relative;
+  }
+  .nav-tab-active::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 25%;
+    right: 25%;
+    height: 2px;
+    background: hsl(0 100% 50%);
+    border-radius: 0 0 3px 3px;
+  }
+
+  /* ── Slide up entrance ───────────────────────────── */
+  .slide-up {
+    animation: slideUp 0.45s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Number flash on balance change ─────────────── */
+  .number-flash {
+    animation: numFlash 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @keyframes numFlash {
+    0%, 100% { opacity: 1; }
+    35%       { opacity: 0.35; }
+    65%       { opacity: 1; }
+  }
+
+  /* ── Section horizontal rule ─────────────────────── */
+  .divider-fade {
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.07) 40%, rgba(255,255,255,0.07) 60%, transparent 100%);
+  }
+
+  /* ── Glass input premium ─────────────────────────── */
+  .input-premium {
+    background: rgba(255,255,255,0.04) !important;
+    border: 1px solid rgba(255,255,255,0.09) !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease !important;
+  }
+  .input-premium:focus-within,
+  .input-premium:focus {
+    background: rgba(255,255,255,0.06) !important;
+    border-color: rgba(255,255,255,0.18) !important;
+    box-shadow: 0 0 0 3px rgba(214,20,20,0.09) !important;
+  }
+
+  /* ── Primary CTA (red) premium ───────────────────── */
+  .btn-primary-premium {
+    background: linear-gradient(135deg, hsl(0,100%,50%) 0%, hsl(0,100%,42%) 100%) !important;
+    box-shadow: 0 8px 32px rgba(214,20,20,0.38), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+    transition: all 0.12s cubic-bezier(0.4,0,0.2,1) !important;
+  }
+  .btn-primary-premium:hover {
+    box-shadow: 0 12px 44px rgba(214,20,20,0.55), inset 0 1px 0 rgba(255,255,255,0.2) !important;
+    transform: translateY(-1px) !important;
+  }
+  .btn-primary-premium:active {
+    transform: scale(0.97) !important;
+    transition-duration: 0.05s !important;
+  }
 }
 
 @keyframes brand-header-3d-float {

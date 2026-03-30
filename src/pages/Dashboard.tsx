@@ -266,101 +266,121 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tighter">My Hub Center</h1>
-          <p className="text-muted-foreground text-[9px] sm:text-[10px] font-black uppercase tracking-widest opacity-60">
-            ID: {user?.id?.substring(0, 8)}…
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tighter">My Wallet</h1>
+          <p className="text-muted-foreground text-[9px] sm:text-[10px] font-black uppercase tracking-widest opacity-40">
+            {user?.email?.split('@')[0] ?? user?.id?.substring(0, 8)}
           </p>
         </div>
         <Link to="/home">
-          <Button variant="outline" size="sm" className="rounded-full px-4 border-white/5 bg-white/5 hover:bg-white/10 font-black text-[10px] shrink-0">
+          <Button variant="outline" size="sm" className="rounded-full px-4 border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] font-black text-[10px] shrink-0 transition-all">
             <ArrowLeft className="w-3 h-3 mr-1.5" /> HOME
           </Button>
         </Link>
       </div>
 
       {/* Top cards */}
-      <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {/* BALANCE CARD */}
-        <div className="relative overflow-hidden glass rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 glow shadow-2xl border-white/5 group sm:col-span-2 lg:col-span-1">
-          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform duration-700">
-            <Wallet className="w-24 h-24 sm:w-32 sm:h-32" />
+      <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
+
+        {/* BALANCE CARD ── hero card */}
+        <div className="relative overflow-hidden glass rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-2xl border border-white/[0.07] group sm:col-span-2 lg:col-span-1 card-lift"
+          style={{ background: 'linear-gradient(145deg, rgba(16,185,129,0.06) 0%, rgba(5,5,5,0) 60%)' }}
+        >
+          {/* watermark */}
+          <div className="absolute top-0 right-0 p-6 opacity-[0.04] group-hover:opacity-[0.07] group-hover:scale-110 transition-all duration-700 pointer-events-none">
+            <Wallet className="w-28 h-28 sm:w-36 sm:h-36" />
           </div>
-          <div className="flex items-center gap-2 text-muted-foreground text-[10px] font-black uppercase tracking-widest mb-3 sm:mb-4">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            Live Balance
+
+          {/* Live indicator */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[9px] font-black uppercase tracking-[0.25em] text-emerald-400/70">Live Balance</span>
+            </div>
           </div>
+
+          {/* Balance number */}
           {userLoading ? (
-            <Skeleton className="h-10 sm:h-12 w-40 sm:w-48 rounded-2xl" />
+            <Skeleton className="h-12 sm:h-14 w-44 sm:w-52 rounded-2xl mb-6" />
           ) : (
-            <p className="text-4xl sm:text-5xl font-black tracking-tighter mb-5 sm:mb-8 transition-all duration-500">
+            <p className="text-5xl sm:text-6xl font-black tracking-tighter mb-6 balance-display leading-none">
               {formatUsd(balance)}
             </p>
           )}
-          <Button
+
+          {/* ✅ RECHARGE BUTTON — instant, no disabled */}
+          <button
+            type="button"
             onClick={() => setShowTopUp(true)}
-            className="w-full py-5 sm:py-6 rounded-2xl font-black bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-600/20 text-white flex items-center justify-center gap-2 btn-press ripple-effect transition-all duration-150 active:scale-[0.98] touch-target"
-            disabled={userLoading}
+            className="btn-recharge w-full h-14 rounded-2xl font-black text-white flex items-center justify-center gap-2.5 text-sm tracking-wider tap-feedback select-none"
           >
-            <Plus className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" />
-            <span className="tracking-wider text-sm">RECHARGE NOW</span>
-          </Button>
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={3} />
+            RECHARGE NOW
+          </button>
         </div>
 
         {/* STATS CARD */}
-        <div className="glass rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 border-white/5 flex flex-col justify-between">
+        <div className="glass rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-7 border border-white/[0.06] flex flex-col justify-between card-lift">
           <div>
-            <div className="flex items-center gap-2 text-muted-foreground text-[10px] font-black uppercase tracking-widest mb-2 opacity-60">
-              <Package className="w-3.5 h-3.5" /> Total Orders
+            <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.25em] text-white/35 mb-3">
+              <Package className="w-3 h-3" /> Orders
             </div>
             {ordersLoading ? (
               <Skeleton className="h-9 w-20 rounded-xl" />
             ) : (
-              <p className="text-3xl sm:text-4xl font-black tracking-tighter">{orders.length}</p>
+              <p className="text-4xl sm:text-5xl font-black tracking-tighter text-white">{orders.length}</p>
             )}
+            <p className="text-[9px] font-black text-white/25 uppercase tracking-widest mt-1">total placed</p>
           </div>
-          <div className="space-y-2 mt-4">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-40">System Health</p>
+          <div className="space-y-2 mt-5">
             <div className="flex gap-1">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-1 flex-1 bg-emerald-500/20 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 animate-pulse" style={{ animationDelay: `${i * 0.1}s` }} />
+                <div key={i} className="h-0.5 flex-1 bg-emerald-500/15 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500/60 animate-pulse rounded-full" style={{ animationDelay: `${i * 0.12}s` }} />
                 </div>
               ))}
             </div>
+            <p className="text-[8px] font-black text-white/20 uppercase tracking-widest">system nominal</p>
           </div>
-          <Link to="/orders" className="mt-4 block">
-            <Button variant="ghost" size="sm" className="w-full rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 font-black text-[10px] touch-target">
-              <ShoppingBag className="w-3.5 h-3.5 mr-2" /> VIEW ALL ORDERS
-            </Button>
+          <Link to="/orders" className="mt-5 block">
+            <button type="button" className="w-full h-10 rounded-2xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.07] font-black text-[10px] text-white/60 hover:text-white flex items-center justify-center gap-2 transition-all tap-feedback">
+              <ShoppingBag className="w-3.5 h-3.5" /> VIEW ALL ORDERS
+            </button>
           </Link>
         </div>
 
-        {/* QUICK ACTION CARD */}
-        <div className="gradient-primary rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 flex flex-col justify-between shadow-2xl shadow-primary/20 relative overflow-hidden group">
-          <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-white/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+        {/* STORE HUB CARD */}
+        <div className="rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-7 flex flex-col justify-between shadow-2xl shadow-primary/15 relative overflow-hidden group card-lift"
+          style={{ background: 'linear-gradient(135deg, hsl(0,100%,44%) 0%, hsl(0,100%,32%) 100%)' }}
+        >
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            style={{ background: 'radial-gradient(circle at 20% 80%, rgba(255,255,255,0.08) 0%, transparent 60%)' }}
+          />
           <div className="space-y-1 relative z-10">
-            <p className="text-lg sm:text-xl font-black text-white italic">Store Hub</p>
-            <p className="text-white/60 text-xs font-bold">Games & Social Services</p>
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="w-3.5 h-3.5 text-white/60" />
+              <span className="text-[9px] font-black uppercase tracking-[0.25em] text-white/60">Cedar Hub</span>
+            </div>
+            <p className="text-xl sm:text-2xl font-black text-white italic tracking-tight leading-tight">Games & <br/>Social Media</p>
           </div>
-          <Link to="/home" className="relative z-10">
-            <Button variant="secondary" className="mt-4 sm:mt-6 w-full py-5 sm:py-6 rounded-2xl font-black shadow-lg hover:scale-[1.02] transition-transform text-sm touch-target">
-              TO STORE <ArrowLeft className="w-4 h-4 ms-2 rotate-180" />
-            </Button>
+          <Link to="/home" className="relative z-10 mt-5 block">
+            <button type="button" className="w-full h-12 rounded-2xl font-black bg-white/15 hover:bg-white/25 backdrop-blur text-white flex items-center justify-center gap-2 text-sm transition-all tap-feedback border border-white/20">
+              OPEN STORE <ArrowLeft className="w-4 h-4 rotate-180" />
+            </button>
           </Link>
         </div>
       </div>
 
-      {/* PROMO CODE + REFERRAL (side by side on desktop) */}
-      <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+      {/* PROMO CODE + REFERRAL */}
+      <div className="grid gap-4 sm:gap-5 md:grid-cols-2">
         {/* PROMO CODE */}
-        <div className="glass rounded-[2rem] border-white/5 p-5 sm:p-8 space-y-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20">
+        <div className="glass rounded-[2rem] border border-white/[0.06] p-5 sm:p-7 space-y-4 card-lift">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
               <Sparkles className="w-4 h-4 text-primary" />
             </div>
             <div>
               <p className="font-black text-sm tracking-tight">Promo Code</p>
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Redeem for wallet credit</p>
+              <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Redeem for wallet credit</p>
             </div>
           </div>
           <PromoCodeInput onRedeemed={(amount) => {
@@ -371,68 +391,67 @@ export default function Dashboard() {
         </div>
 
         {/* REFERRAL */}
-        <div className="glass rounded-[2rem] border-white/5 p-5 sm:p-8 space-y-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
+        <div className="glass rounded-[2rem] border border-white/[0.06] p-5 sm:p-7 space-y-4 card-lift">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
               <Gift className="w-4 h-4 text-amber-400" />
             </div>
             <div>
               <p className="font-black text-sm tracking-tight">Referral Program</p>
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Earn $2 per referral</p>
+              <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Earn $2 per invite</p>
             </div>
           </div>
 
           {/* User's own code */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Your Code</label>
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30">Your Code</label>
             <div className="flex gap-2">
-              <div className="flex-1 h-12 bg-amber-500/5 border border-amber-500/20 rounded-2xl flex items-center px-4">
-                <span className="font-black tracking-widest text-amber-400 text-sm font-mono">
-                  {userRow?.referral_code ?? referralStats?.referral_code ?? '...'}
+              <div className="flex-1 h-12 bg-amber-500/[0.06] border border-amber-500/20 rounded-2xl flex items-center px-4">
+                <span className="font-black tracking-[0.2em] text-amber-300 text-sm font-mono">
+                  {userRow?.referral_code ?? referralStats?.referral_code ?? '···'}
                 </span>
               </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-12 w-12 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10"
+              <button
+                type="button"
+                className="h-12 w-12 rounded-2xl border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] flex items-center justify-center transition-all tap-feedback"
                 onClick={() => copyReferralCode(userRow?.referral_code ?? referralStats?.referral_code ?? '')}
               >
-                {referralCopied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-              </Button>
+                {referralCopied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-white/50" />}
+              </button>
             </div>
           </div>
 
           {/* Stats row */}
-          <div className="flex gap-4">
-            <div className="flex-1 bg-white/[0.03] border border-white/5 rounded-2xl p-4 text-center">
-              <p className="text-2xl font-black tracking-tighter text-amber-400">{referralStats?.total_referrals ?? 0}</p>
-              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50 mt-1 flex items-center justify-center gap-1">
-                <Users className="w-2.5 h-2.5" /> Referrals
+          <div className="flex gap-3">
+            <div className="flex-1 bg-white/[0.03] border border-white/[0.06] rounded-2xl p-3.5 text-center">
+              <p className="text-2xl font-black tracking-tighter text-amber-300">{referralStats?.total_referrals ?? 0}</p>
+              <p className="text-[8px] font-black uppercase tracking-widest text-white/25 mt-0.5 flex items-center justify-center gap-1">
+                <Users className="w-2 h-2" /> Referrals
               </p>
             </div>
-            <div className="flex-1 bg-white/[0.03] border border-white/5 rounded-2xl p-4 text-center">
+            <div className="flex-1 bg-white/[0.03] border border-white/[0.06] rounded-2xl p-3.5 text-center">
               <p className="text-2xl font-black tracking-tighter text-emerald-400">
                 {formatUsd(referralStats?.total_earned ?? 0)}
               </p>
-              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50 mt-1">Earned</p>
+              <p className="text-[8px] font-black uppercase tracking-widest text-white/25 mt-0.5">Earned</p>
             </div>
           </div>
 
-          {/* Apply referral code (if user hasn't been referred yet) */}
+          {/* Apply referral code */}
           {!userRow?.referred_by_id && (
-            <div className="space-y-2 pt-2 border-t border-white/5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Have a referral code?</label>
+            <div className="space-y-2 pt-3 border-t border-white/[0.06]">
+              <label className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30">Have a referral code?</label>
               <div className="flex gap-2">
                 <Input
                   value={referralInput}
                   onChange={(e) => setReferralInput(e.target.value.toUpperCase())}
                   placeholder="CEDAR-XXXXXX"
-                  className="h-11 rounded-2xl border-white/10 bg-white/5 font-black text-sm tracking-widest"
+                  className="h-11 rounded-2xl border-white/[0.09] bg-white/[0.04] font-black text-sm tracking-widest"
                 />
                 <Button
                   onClick={handleApplyReferral}
                   disabled={referralLoading || !referralInput.trim()}
-                  className="h-11 px-5 rounded-2xl font-black text-[10px] tracking-widest"
+                  className="h-11 px-5 rounded-2xl font-black text-[10px] tracking-widest btn-primary-premium"
                 >
                   {referralLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'APPLY'}
                 </Button>
@@ -558,20 +577,21 @@ export default function Dashboard() {
       )}
 
       {/* TRANSACTION HISTORY */}
-      <div className="glass rounded-[2rem] sm:rounded-[2.5rem] border-white/5 shadow-2xl relative overflow-hidden">
-        <div className="px-5 sm:px-8 py-5 sm:py-8 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
-          <h2 className="font-black text-xl sm:text-2xl flex items-center gap-3 sm:gap-4 italic tracking-tighter">
-            <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-primary" /> HUB LOGS
+      <div className="glass rounded-[2rem] sm:rounded-[2.5rem] border border-white/[0.06] shadow-2xl relative overflow-hidden">
+        <div className="px-5 sm:px-8 py-5 sm:py-6 border-b border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6">
+          <h2 className="font-black text-base sm:text-lg flex items-center gap-2.5 tracking-tight text-white/80">
+            <Clock className="w-4 h-4 text-primary" /> Transaction History
           </h2>
-          <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5 self-start sm:self-auto">
+          <div className="flex bg-white/[0.04] p-0.5 rounded-xl border border-white/[0.07] self-start sm:self-auto">
             {(['all', 'credit', 'debit'] as const).map((f) => (
               <button
                 key={f}
+                type="button"
                 onClick={() => { setTxFilter(f); setTxLimit(15) }}
-                className={`px-4 sm:px-6 py-2 rounded-xl text-[9px] font-black transition-all touch-target min-h-0 ${
+                className={`px-4 sm:px-5 py-1.5 rounded-lg text-[9px] font-black transition-all ${
                   txFilter === f
-                    ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-105'
-                    : 'text-muted-foreground hover:bg-white/5'
+                    ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                    : 'text-white/35 hover:text-white/60'
                 }`}
               >
                 {f.toUpperCase()}
@@ -609,31 +629,32 @@ export default function Dashboard() {
                   const isNeutral = txDir === 'neutral' || tx.status === 'rejected'
 
                   return (
-                    <div key={tx.id} className="flex items-center gap-3 sm:gap-6 px-4 sm:px-10 py-4 sm:py-6 hover:bg-white/[0.01] transition-colors group">
-                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 border transition-all ${
-                        isNeutral
-                          ? 'bg-muted border-white/5 text-muted-foreground shadow-inner'
-                          : isCredit
-                            ? 'bg-emerald-500/5 border-emerald-500/10 text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.05)]'
-                            : 'bg-destructive/5 border-destructive/10 text-destructive shadow-[0_0_20px_rgba(239,68,68,0.05)]'
+                    <div key={tx.id} className="flex items-center gap-3 sm:gap-4 px-4 sm:px-8 py-3.5 sm:py-4 hover:bg-white/[0.02] transition-colors group">
+                      {/* icon */}
+                      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                        isNeutral ? 'tx-icon-neutral' : isCredit ? 'tx-icon-credit' : 'tx-icon-debit'
                       }`}>
-                        {isNeutral ? <Minus className="w-4 h-4" /> : isCredit ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                        {isNeutral ? <Minus className="w-3.5 h-3.5" /> : isCredit ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
                       </div>
 
+                      {/* description + time */}
                       <div className="flex-1 min-w-0">
-                        <p className="font-black text-[12px] sm:text-[13px] tracking-tight truncate group-hover:translate-x-1 transition-transform">
+                        <p className="font-black text-[12px] sm:text-[13px] tracking-tight truncate text-white/90">
                           {tx.description ?? tx.method}
                         </p>
-                        <p className="text-[9px] sm:text-[10px] text-muted-foreground font-black mt-0.5 uppercase tracking-widest opacity-40">
-                          {tx.created_at ? format(new Date(tx.created_at), 'MMM d, HH:mm') : '—'}
+                        <p className="text-[8px] sm:text-[9px] font-black mt-0.5 uppercase tracking-widest text-white/25">
+                          {tx.created_at ? format(new Date(tx.created_at), 'MMM d · HH:mm') : '—'}
                         </p>
                       </div>
 
+                      {/* amount + badge */}
                       <div className="text-right shrink-0">
-                        <p className={`font-black text-sm sm:text-lg tabular-nums tracking-tighter ${isNeutral ? 'text-muted-foreground' : isCredit ? 'text-emerald-500' : 'text-destructive'}`}>
+                        <p className={`font-black text-sm sm:text-base tabular-nums tracking-tighter ${
+                          isNeutral ? 'text-white/35' : isCredit ? 'text-emerald-400' : 'text-red-400'
+                        }`}>
                           {isNeutral ? '' : isCredit ? '+' : '−'}{formatUsd(Number(tx.amount))}
                         </p>
-                        <div className="mt-1 sm:mt-2 flex justify-end">
+                        <div className="mt-1 flex justify-end">
                           <StatusBadge status={tx.status} />
                         </div>
                       </div>
