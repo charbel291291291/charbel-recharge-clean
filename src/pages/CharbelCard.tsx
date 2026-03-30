@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Loader2, CheckCircle2, AlertCircle, ShoppingCart, ChevronDown, Flame, SearchX, Rocket, MessageCircle } from 'lucide-react';
+import { Search, Loader2, CheckCircle2, AlertCircle, ShoppingCart, ChevronDown, SearchX, Rocket, MessageCircle } from 'lucide-react';
 import { DashboardSkeletonGrid } from '../components/Skeletons';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -13,6 +14,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 const ServiceCard = memo(({ service, onOrderSuccess }: any) => {
+  const { t } = useLanguage();
   const [link, setLink] = useState('');
   const [qty, setQty] = useState<number | ''>('');
   const [loading, setLoading] = useState(false);
@@ -23,10 +25,10 @@ const ServiceCard = memo(({ service, onOrderSuccess }: any) => {
   const previewCost = (typeof qty === 'number' && qty > 0) ? (finalRate / 1000) * qty : 0;
 
   const handleOrder = async () => {
-    if (!link.trim()) return setError("Target URL is required.");
+    if (!link.trim()) return setError(t('enterTargetId'));
     const numQty = Number(qty);
     if (!numQty || numQty < Number(service.min) || numQty > Number(service.max)) {
-      return setError(`Quantity must be between ${service.min} and ${service.max}`);
+      return setError(`${t('amount')} must be between ${service.min} and ${service.max}`);
     }
 
     setLoading(true); setError(null); setSuccess(null);
@@ -45,13 +47,13 @@ const ServiceCard = memo(({ service, onOrderSuccess }: any) => {
       if (invokeError) throw new Error(invokeError.message || "Network Error.");
       if (data?.error || !data?.success) throw new Error(data?.error || "Transaction Failed.");
 
-      setSuccess(`Order #${data.order_id?.substring(0,6)} Placed Successfully!`);
+      setSuccess(`${t('orderSubmitted')} #${data.order_id?.substring(0,6)}`);
       setLink(''); setQty('');
       onOrderSuccess(); 
       setTimeout(() => setSuccess(null), 6000);
     } catch (err: any) {
       console.error("Function error:", err);
-      setError(err.message || 'An unexpected error occurred.');
+      setError(err.message || t('somethingWentWrong'));
     } finally {
       setLoading(false);
     }
@@ -68,28 +70,28 @@ const ServiceCard = memo(({ service, onOrderSuccess }: any) => {
             <span className="text-xl font-extrabold text-foreground tracking-tight leading-none">
               ${finalRate.toFixed(3)}
             </span>
-            <p className="text-[10px] uppercase font-bold text-muted-foreground">Per 1,000</p>
+            <p className="text-[10px] uppercase font-bold text-muted-foreground">{t('per1000')}</p>
           </div>
         </div>
         <h3 className="font-bold text-sm text-foreground leading-snug line-clamp-2 h-10">{service.name}</h3>
       </div>
       <div className="p-4 flex-1 flex flex-col gap-3">
         <div className="flex items-center justify-between text-[11px] font-bold px-3 py-1.5 bg-muted rounded-md text-muted-foreground uppercase tracking-widest">
-          <span>Min: {service.min}</span>
+          <span>{t('min')}: {service.min}</span>
           <div className="w-px h-3 bg-border"></div>
-          <span>Max: {service.max}</span>
+          <span>{t('max')}: {service.max}</span>
         </div>
         <div className="space-y-2">
-          <input type="url" placeholder="Target URL/Account..." value={link} onChange={(e) => { setLink(e.target.value); setError(null); }} className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:ring-1 focus:ring-emerald-500 transition-all outline-none" />
-          <input type="number" placeholder={`Qty: e.g. ${service.min}`} value={qty} min={service.min} max={service.max} onChange={(e) => { setQty(e.target.value ? Number(e.target.value) : ''); setError(null); }} className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm font-mono focus:ring-1 focus:ring-emerald-500 transition-all outline-none" />
-          {previewCost > 0 && <p className="text-xs font-bold text-emerald-500 text-right font-black">Cost: ${previewCost.toFixed(3)}</p>}
+          <input type="url" placeholder={t('targetUrl')} value={link} onChange={(e) => { setLink(e.target.value); setError(null); }} className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:ring-1 focus:ring-emerald-500 transition-all outline-none" />
+          <input type="number" placeholder={`${t('qtyPlaceholder')} ${service.min}`} value={qty} min={service.min} max={service.max} onChange={(e) => { setQty(e.target.value ? Number(e.target.value) : ''); setError(null); }} className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm font-mono focus:ring-1 focus:ring-emerald-500 transition-all outline-none" />
+          {previewCost > 0 && <p className="text-xs font-bold text-emerald-500 text-right font-black">{t('cost')}: ${previewCost.toFixed(3)}</p>}
         </div>
         {error && <div className="text-[11px] font-bold text-destructive bg-destructive/10 px-2 py-1 rounded flex gap-1"><AlertCircle className="w-3 h-3"/> {error}</div>}
         {success && <div className="text-[11px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded flex gap-1"><CheckCircle2 className="w-3 h-3"/> {success}</div>}
       </div>
       <div className="p-4 pt-0">
         <button onClick={handleOrder} disabled={loading} className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-600 text-white rounded-md text-sm font-black shadow-md hover:bg-emerald-700 active:scale-95 transition-all disabled:opacity-50">
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><ShoppingCart className="w-4 h-4" /> Buy Now</>}
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><ShoppingCart className="w-4 h-4" /> {t('buyNow')}</>}
         </button>
       </div>
     </div>
@@ -99,6 +101,7 @@ const ServiceCard = memo(({ service, onOrderSuccess }: any) => {
 const ITEMS_PER_PAGE = 30;
 
 export default function CharbelCardPage() {
+  const { t } = useLanguage();
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -150,9 +153,9 @@ export default function CharbelCardPage() {
                <MessageCircle className="w-7 h-7" />
             </div>
             <div>
-              <h1 className="text-3xl font-black tracking-tight text-foreground">Cedar Card</h1>
+              <h1 className="text-3xl font-black tracking-tight text-foreground">{t('cedarCard')}</h1>
               <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-[8px] mt-1 ml-0.5 opacity-60 flex items-center gap-2">
-                 <Rocket className="w-2 h-2 text-emerald-500" /> Premium Digital Recharge
+                 <Rocket className="w-2 h-2 text-emerald-500" /> {t('premiumRecharge')}
               </p>
             </div>
         </div>
@@ -164,7 +167,7 @@ export default function CharbelCardPage() {
         <aside className="w-full lg:w-72 flex-shrink-0">
           <div className="bg-card border border-border rounded-[2.5rem] p-6 sticky top-24 shadow-sm">
             <h3 className="font-black text-[9px] uppercase tracking-widest text-muted-foreground mb-6 ml-1 flex items-center gap-2.5 opacity-80">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Categories
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> {t('categories')}
             </h3>
             <div className="space-y-2">
               {categories.map((cat: any) => (
@@ -173,7 +176,7 @@ export default function CharbelCardPage() {
                     onClick={() => { setActiveCategory(cat); setSearchQuery(''); }} 
                     className={`w-full text-left px-5 py-3.5 rounded-2xl text-[12px] transition-all border ${activeCategory === cat ? 'bg-emerald-500/5 border-emerald-500/30 text-emerald-600 font-black shadow-inner translate-x-1' : 'border-transparent text-muted-foreground hover:bg-muted font-bold'}`}
                 >
-                  {cat}
+                  {cat === 'Cedar Card' ? t('cedarCard') : cat}
                 </button>
               ))}
             </div>
@@ -185,7 +188,7 @@ export default function CharbelCardPage() {
           <div className="mb-10">
             <div className="relative group">
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-emerald-500 transition-all duration-300" />
-              <input type="text" placeholder="Search for chat services..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-16 pr-8 py-5 bg-card border border-border rounded-[2rem] text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all shadow-sm group-hover:shadow-lg" />
+              <input type="text" placeholder={t('searchChatServices')} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-16 pr-8 py-5 bg-card border border-border rounded-[2rem] text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all shadow-sm group-hover:shadow-lg" />
             </div>
           </div>
 
@@ -194,7 +197,7 @@ export default function CharbelCardPage() {
           ) : currentlyVisible.length === 0 ? (
             <div className="py-24 text-center">
                 <SearchX className="w-10 h-10 text-muted-foreground/30 mx-auto mb-6" />
-                <p className="font-black text-muted-foreground text-lg">No Chat Services Found.</p>
+                <p className="font-black text-muted-foreground text-lg">{t('noChatServices')}</p>
             </div>
           ) : (
             <>
@@ -205,7 +208,7 @@ export default function CharbelCardPage() {
               {visibleCount < filteredServices.length && (
                 <div className="mt-16 text-center">
                   <button onClick={() => setVisibleCount(v => v + ITEMS_PER_PAGE)} className="px-12 py-4 bg-muted/50 text-foreground hover:bg-emerald-600 hover:text-white rounded-[2rem] text-[10px] font-black shadow-xl tracking-widest inline-flex items-center gap-3 transition-all ring-1 ring-border border border-border">
-                    <ChevronDown className="w-4 h-4"/> LOAD MORE APPS
+                    <ChevronDown className="w-4 h-4"/> {t('loadMoreApps')}
                   </button>
                 </div>
               )}

@@ -1,11 +1,14 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, ShieldCheck, Zap, Wallet, Gamepad2, Rocket } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export default function HomePage() {
+  const { t } = useLanguage();
+  
   const portalCards = [
     {
-      title: "Hub Center",
-      description: "Access your atomic ledger. Manage your wallet balance, check pending orders, and view transaction history.",
+      title: t('hubCenter'),
+      description: t('hubCenterDesc'),
       icon: Wallet,
       image: "/assets/hub_wallet.png",
       link: "/dashboard",
@@ -14,18 +17,18 @@ export default function HomePage() {
       border: "hover:border-blue-500/40"
     },
     {
-      title: "Charbel Card",
-      description: "Instant Game Recharge. PUBG UC, Steam, and mobile top-ups for your favorite games at the best rates in the market.",
+      title: t('cedarCard'),
+      description: t('cedarCardDesc'),
       icon: Gamepad2,
       image: "/assets/hub_gaming.png",
-      link: "/charbel-card",
+      link: "/cedar-boost",
       color: "from-emerald-500/20 to-teal-500/20",
       accent: "text-emerald-400",
       border: "hover:border-emerald-500/40"
     },
     {
-      title: "SMM Engine",
-      description: "Automated Social Growth. Boost followers, likes, and engagement across all major social platforms using SMM Engine APIs.",
+      title: t('smmEngine'),
+      description: t('smmEngineDesc'),
       icon: Rocket,
       image: "/assets/hub_smm.png",
       link: "/smm-engine",
@@ -43,14 +46,14 @@ export default function HomePage() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[160px] -z-10" />
         <div className="flex items-center justify-center gap-3 mb-6 animate-bounce">
            <Zap className="w-5 h-5 text-primary fill-primary" />
-           <span className="text-xs font-black uppercase tracking-[0.5em] text-muted-foreground opacity-70">Unified HUB Control</span>
+           <span className="text-xs font-black uppercase tracking-[0.5em] text-muted-foreground opacity-70">{t('unifiedHub')}</span>
         </div>
         <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-8 leading-none bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent italic">
-          Choose Your Path.
+          {t('choosePath')}
         </h1>
         <p className="text-lg md:text-xl text-muted-foreground font-bold max-w-2xl mx-auto leading-relaxed opacity-80">
-          Welcome to the next generation of digital asset exchange. 
-          Everything is secured by the <span className="text-foreground">Charbel Atomic Ledger</span> logic.
+          {t('welcomeNextGen')} <br/>
+          <span className="text-foreground opacity-100">{t('securedBy')}</span>
         </p>
       </div>
 
@@ -89,7 +92,7 @@ export default function HomePage() {
                   {card.description}
                 </p>
                 <div className="flex items-center gap-3 font-black text-[10px] uppercase tracking-widest text-foreground bg-white/5 w-fit px-6 py-3 rounded-full border border-white/5 hover:bg-white/10 transition-colors">
-                  ENTER PORTAL <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                  {t('enterPortal')} <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
                 </div>
              </div>
              
@@ -104,7 +107,7 @@ export default function HomePage() {
       <div className="mt-20 flex flex-col items-center gap-6 animate-fade-in delay-700">
         <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.4em] bg-card/60 backdrop-blur-xl py-4 px-10 rounded-full border border-white/5 shadow-2xl shadow-black/40">
           <ShieldCheck className="w-5 h-5 text-emerald-500" />
-          <span className="opacity-50">Charbel HUB Protected System</span>
+          <span className="opacity-50">{t('protectedSystem')}</span>
         </div>
         <div className="flex gap-8 opacity-20 hover:opacity-100 transition-opacity grayscale hover:grayscale-0 duration-500">
              <div className="font-black text-xl italic tracking-tighter">BITCOIN</div>
