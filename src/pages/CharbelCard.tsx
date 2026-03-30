@@ -149,9 +149,9 @@ export default function CharbelCardPage() {
                <MessageCircle className="w-7 h-7" />
             </div>
             <div>
-              <h1 className="text-3xl font-black tracking-tight text-foreground">Charbel HUB</h1>
+              <h1 className="text-3xl font-black tracking-tight text-foreground">CedarBoost Hub</h1>
               <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-[8px] mt-1 ml-0.5 opacity-60 flex items-center gap-2">
-                 <Rocket className="w-2 h-2 text-emerald-500" /> Chat & Messaging Platform
+                 <Rocket className="w-2 h-2 text-emerald-500" /> Premium Digital Recharge
               </p>
             </div>
         </div>
