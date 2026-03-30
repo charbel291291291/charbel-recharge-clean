@@ -143,10 +143,13 @@ export default function CharbelCardPage() {
     supabase.from('smm_services').select('*').ilike('service_id', 'sahl_%').order('rate', { ascending: true })
       .then(({ data }) => {
         if (data) {
-           const mapped = data.map(s => ({ ...s, rootType: getRootType((s as any).category) }));
+           const mapped = data
+            .map(s => ({ ...s, rootType: getRootType((s as any).category) }))
+            .filter(s => s.rootType === 'Chat Apps'); // STRICT FILTER FOR USER UI
+           
            setServices(mapped);
            // @ts-ignore
-           const firstCat = mapped.find(s => s.rootType === 'Chat Apps')?.category;
+           const firstCat = mapped[0]?.category;
            if (firstCat) setActiveCategory(firstCat);
         }
         setLoading(false);
@@ -154,9 +157,7 @@ export default function CharbelCardPage() {
   }, []);
 
   const rootTypes = [
-    { label: 'Chat Apps', icon: MessageCircle, color: 'emerald' },
-    { label: 'Games Store', icon: Gamepad2, color: 'blue' },
-    { label: 'Tools & Vouchers', icon: Package, color: 'purple' }
+    { label: 'Chat Apps', icon: MessageCircle, color: 'emerald' }
   ];
   
   const subCategories = useMemo(() => {

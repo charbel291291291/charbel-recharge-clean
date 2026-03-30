@@ -107,21 +107,30 @@ export default function SmmServicesPage() {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
   useEffect(() => {
-    // @ts-ignore - Supabase type needs to be updated with new tables
-    supabase.from('smm_services').select('*').not('service_id', 'ilike', 'sahl_%').limit(2000).order('rate', { ascending: true })
-      .then(({ data }) => {
-        if (data) { setServices(data); if (data.length > 0) setActiveCategory("Popular Services"); }
-        setLoading(false);
-      });
+    // We only want Chat Apps for the UI.
+    const chatAppKeywords = ['Xena', 'YoHo', 'SoulStar', 'WhatsApp', 'Telegram', 'Messenger', 'IMOU', 'Azar'];
+    let query = supabase.from('smm_services').select('*').limit(2000).order('rate', { ascending: true });
+    
+    // Add OR filter for name containment of any keyword
+    const filterString = chatAppKeywords.map(k => `name.ilike.%${k}%`).join(',');
+    query = query.or(filterString);
+
+    // @ts-ignore
+    query.then(({ data }) => {
+      if (data) { 
+        setServices(data); 
+        if (data.length > 0) setActiveCategory("Chat Apps"); 
+      }
+      setLoading(false);
+    });
   }, []);
 
-  const categories = useMemo(() => ['Popular Services', ...Array.from(new Set(services.map(s => s.category))).sort()], [services]);
+  const categories = useMemo(() => ['Chat Apps'], []);
 
   const filteredServices = useMemo(() => {
     setVisibleCount(ITEMS_PER_PAGE);
     let filtered = services;
-    if (activeCategory === 'Popular Services') filtered = [...services].sort((a,b) => Number(a.rate) - Number(b.rate));
-    else if (activeCategory) filtered = services.filter(s => s.category === activeCategory);
+    if (activeCategory === 'Chat Apps') filtered = [...services].sort((a,b) => Number(a.rate) - Number(b.rate));
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
       filtered = filtered.filter(s => s.name.toLowerCase().includes(q) || String(s.service_id).includes(q) || s.category.toLowerCase().includes(q));
@@ -138,8 +147,8 @@ export default function SmmServicesPage() {
           <Rocket className="w-6 h-6" />
         </div>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black">Social Media Growth</h1>
-          <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs mt-1">Automated Panel</p>
+          <h1 className="text-2xl sm:text-3xl font-black">Chat & Messaging Apps</h1>
+          <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs mt-1">Quick Recharge</p>
         </div>
       </div>
 
