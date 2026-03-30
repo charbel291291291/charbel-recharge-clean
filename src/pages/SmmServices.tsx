@@ -107,30 +107,38 @@ export default function SmmServicesPage() {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
   useEffect(() => {
-    // We only want Chat Apps for the UI.
+    // RESTORE ALL: Fetch all services BUT filter out Chat Apps
     const chatAppKeywords = ['Xena', 'YoHo', 'SoulStar', 'WhatsApp', 'Telegram', 'Messenger', 'IMOU', 'Azar'];
     let query = supabase.from('smm_services').select('*').limit(2000).order('rate', { ascending: true });
     
-    // Add OR filter for name containment of any keyword
-    const filterString = chatAppKeywords.map(k => `name.ilike.%${k}%`).join(',');
-    query = query.or(filterString);
-
     // @ts-ignore
     query.then(({ data }) => {
-      if (data) { 
-        setServices(data); 
-        if (data.length > 0) setActiveCategory("Chat Apps"); 
+      if (data) {
+        // Filter out chat apps locally to leave "the others"
+        const others = data.filter(s => 
+          !chatAppKeywords.some(k => s.name.toLowerCase().includes(k.toLowerCase()))
+        );
+        setServices(others);
+        if (others.length > 0) setActiveCategory("Popular Services");
       }
       setLoading(false);
     });
   }, []);
 
-  const categories = useMemo(() => ['Chat Apps'], []);
+  const categories = useMemo(() => {
+    const cats = Array.from(new Set(services.map(s => s.category))).sort();
+    return ['Popular Services', ...cats];
+  }, [services]);
 
   const filteredServices = useMemo(() => {
     setVisibleCount(ITEMS_PER_PAGE);
     let filtered = services;
-    if (activeCategory === 'Chat Apps') filtered = [...services].sort((a,b) => Number(a.rate) - Number(b.rate));
+    if (activeCategory === 'Popular Services') {
+        filtered = [...services].sort((a,b) => Number(a.rate) - Number(b.rate));
+    } else if (activeCategory) {
+        filtered = services.filter(s => s.category === activeCategory);
+    }
+
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
       filtered = filtered.filter(s => s.name.toLowerCase().includes(q) || String(s.service_id).includes(q) || s.category.toLowerCase().includes(q));
@@ -143,22 +151,22 @@ export default function SmmServicesPage() {
   return (
     <div className="animate-in fade-in duration-500 pb-20">
       <div className="flex items-center gap-4 mb-8">
-        <div className="p-3 bg-purple-500/10 text-purple-500 rounded-xl">
+        <div className="p-3 bg-primary/10 text-primary rounded-xl">
           <Rocket className="w-6 h-6" />
         </div>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black">Chat & Messaging Apps</h1>
-          <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs mt-1">Quick Recharge</p>
+          <h1 className="text-2xl sm:text-3xl font-black">SMM Engine</h1>
+          <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs mt-1">Growth Services</p>
         </div>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
         <aside className="w-full lg:w-64 flex-shrink-0">
           <div className="bg-card border border-border rounded-xl p-4 sticky top-20 max-h-[75vh] overflow-y-auto no-scrollbar shadow-sm">
-            <h3 className="font-bold text-sm mb-4">Categories</h3>
+            <h3 className="font-bold text-xs uppercase tracking-widest text-muted-foreground mb-4 ml-1">Categories</h3>
             <div className="space-y-1">
               {categories.map((cat: any) => (
-                <button key={cat} onClick={() => { setActiveCategory(cat); setSearchQuery(''); }} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${activeCategory === cat ? 'bg-primary text-primary-foreground font-bold' : 'text-muted-foreground hover:bg-muted'}`}>
+                <button key={cat} onClick={() => { setActiveCategory(cat); setSearchQuery(''); }} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${activeCategory === cat ? 'bg-primary text-primary-foreground font-black' : 'text-muted-foreground hover:bg-muted font-bold'}`}>
                   {cat === 'Popular Services' ? `🔥 ${cat}` : cat}
                 </button>
               ))}
@@ -170,14 +178,14 @@ export default function SmmServicesPage() {
           <div className="mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input type="text" placeholder="Search services..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all" />
+              <input type="text" placeholder="Search growth services..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm" />
             </div>
           </div>
 
           {loading ? (
             <DashboardSkeletonGrid />
           ) : filteredServices.length === 0 ? (
-            <div className="py-20 text-center"><SearchX className="w-10 h-10 text-muted-foreground mx-auto mb-4" /><p className="font-bold">No services found.</p></div>
+            <div className="py-20 text-center"><SearchX className="w-10 h-10 text-muted-foreground mx-auto mb-4" /><p className="font-bold">No growth services found.</p></div>
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -185,7 +193,7 @@ export default function SmmServicesPage() {
               </div>
               {visibleCount < filteredServices.length && (
                 <div className="mt-8 text-center">
-                  <button onClick={() => setVisibleCount(v => v + ITEMS_PER_PAGE)} className="px-6 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-full text-sm font-bold shadow-sm inline-flex items-center gap-2"><ChevronDown className="w-4 h-4"/> Load More</button>
+                  <button onClick={() => setVisibleCount(v => v + ITEMS_PER_PAGE)} className="px-8 py-2.5 bg-muted hover:bg-primary hover:text-white text-foreground rounded-full text-xs font-black shadow-sm inline-flex items-center gap-2 transition-all uppercase tracking-widest"><ChevronDown className="w-4 h-4"/> Load More Services</button>
                 </div>
               )}
             </>
