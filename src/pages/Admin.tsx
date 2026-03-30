@@ -42,17 +42,129 @@ const ChartTooltip = ({ active, payload, label }: any) => {
 // ─── Metric card ─────────────────────────────────────────────────────────────
 function MetricCard({ label, value, icon: Icon, color, bg, delta }: any) {
   return (
-    <div className="bg-card border border-border p-6 rounded-[2rem] flex items-center justify-between hover:scale-[1.02] transition-transform hover:shadow-xl shadow-sm">
-      <div>
-        <p className="text-muted-foreground font-bold text-[11px] uppercase tracking-widest mb-2 opacity-80">{label}</p>
-        <h3 className="text-3xl lg:text-4xl font-black">{value}</h3>
+    <div className="bg-card border border-border p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-between hover:scale-[1.01] transition-transform hover:shadow-xl shadow-sm card-lift">
+      <div className="min-w-0 pr-2">
+        <p className="text-muted-foreground font-bold text-[9px] sm:text-[11px] uppercase tracking-widest mb-1 sm:mb-2 opacity-80">{label}</p>
+        <h3 className="text-xl sm:text-3xl lg:text-4xl font-black truncate">{value}</h3>
         {delta !== undefined && (
-          <p className={`text-[10px] font-black mt-1 flex items-center gap-1 ${delta >= 0 ? 'text-emerald-500' : 'text-destructive'}`}>
-            <ArrowUpRight className="w-3 h-3" /> {delta >= 0 ? '+' : ''}{delta} this period
+          <p className={`text-[9px] font-black mt-1 flex items-center gap-1 ${delta >= 0 ? 'text-emerald-500' : 'text-destructive'}`}>
+            <ArrowUpRight className="w-2.5 h-2.5" /> {delta >= 0 ? '+' : ''}{delta}
           </p>
         )}
       </div>
-      <div className={`p-4 rounded-2xl border ${bg}`}><Icon className={`w-7 h-7 ${color}`} /></div>
+      <div className={`p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border shrink-0 ${bg}`}>
+        <Icon className={`w-5 h-5 sm:w-7 sm:h-7 ${color}`} />
+      </div>
+    </div>
+  );
+}
+
+// ─── Status pill ─────────────────────────────────────────────────────────────
+function StatusPill({ status }: { status: string }) {
+  const color = STATUS_COLORS[status] || '#888';
+  return (
+    <span
+      className="inline-flex px-2.5 py-1 rounded-lg text-[9px] uppercase font-black tracking-wider border whitespace-nowrap"
+      style={{ backgroundColor: color + '18', color, borderColor: color + '40' }}
+    >
+      {status || 'pending'}
+    </span>
+  );
+}
+
+// ─── Mobile deposit card ──────────────────────────────────────────────────────
+function DepositCard({ dep, userEmail, onApprove, onDeny }: any) {
+  const isPending = dep.status === 'pending';
+  return (
+    <div className="p-4 space-y-3 border-b border-border/40 last:border-b-0">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="font-black text-sm truncate">{userEmail || 'Unknown'}</p>
+          <p className="font-mono text-[9px] text-muted-foreground opacity-50 mt-0.5">{dep.user_id?.substring(0, 12)}…</p>
+        </div>
+        <div className="text-right shrink-0">
+          <p className="font-black text-emerald-500 text-lg">+${Number(dep.amount).toFixed(2)}</p>
+          <p className="text-[9px] text-muted-foreground uppercase font-black">{dep.method}</p>
+        </div>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <StatusPill status={dep.status} />
+          {dep.proof && (
+            <a href={dep.proof} target="_blank" rel="noreferrer"
+              className="text-[9px] font-black text-blue-400 underline"
+            >View Proof ↗</a>
+          )}
+        </div>
+        {isPending && (
+          <div className="flex gap-2">
+            <button onClick={onApprove}
+              className="h-9 px-4 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500 hover:text-white rounded-xl text-[10px] font-black flex items-center gap-1.5 transition-all tap-feedback"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" /> OK
+            </button>
+            <button onClick={onDeny}
+              className="h-9 px-4 bg-red-500/10 text-red-400 border border-red-500/25 hover:bg-red-500 hover:text-white rounded-xl text-[10px] font-black flex items-center gap-1.5 transition-all tap-feedback"
+            >
+              <XCircle className="w-3.5 h-3.5" /> Deny
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Mobile order card ────────────────────────────────────────────────────────
+function OrderCard({ order, user, selected, onToggle }: any) {
+  return (
+    <div className={`p-4 border-b border-border/40 last:border-b-0 ${selected ? 'bg-primary/5' : ''}`}>
+      <div className="flex items-start gap-3">
+        <button type="button" onClick={onToggle} className="mt-0.5 tap-feedback">
+          {selected ? <CheckSquare className="w-4 h-4 text-primary" /> : <Square className="w-4 h-4 text-muted-foreground" />}
+        </button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <span className="font-mono text-[9px] text-muted-foreground opacity-50">#{order.id.substring(0, 8)}</span>
+            <StatusPill status={order.status} />
+          </div>
+          <p className="font-bold text-sm truncate">{user?.email || order.user_id?.substring(0, 12)}</p>
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-[10px] text-muted-foreground">Svc #{order.service_id} · qty {order.quantity || '—'}</p>
+            <p className="font-black text-destructive text-sm">{order.cost ? `$${Number(order.cost).toFixed(2)}` : '—'}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Mobile user card ────────────────────────────────────────────────────────
+function UserCard({ u, onEdit }: any) {
+  return (
+    <div className="p-4 border-b border-border/40 last:border-b-0 flex items-center gap-3">
+      <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center shrink-0">
+        <span className="text-primary font-black text-sm">{(u.email || '?').charAt(0).toUpperCase()}</span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-bold text-sm truncate">{u.email || 'No email'}</p>
+        <div className="flex items-center gap-2 mt-1">
+          <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-black tracking-wider ${
+            u.role === 'admin' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+          }`}>{u.role || 'user'}</span>
+          {u.referral_code && (
+            <span className="font-mono text-[9px] text-amber-400">{u.referral_code}</span>
+          )}
+        </div>
+      </div>
+      <div className="text-right shrink-0">
+        <p className="font-black text-emerald-400 text-base">${Number(u.balance || 0).toFixed(2)}</p>
+        <button onClick={onEdit}
+          className="mt-1 h-7 px-3 bg-white/5 border border-white/10 rounded-lg text-[9px] font-black text-white/60 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1 tap-feedback"
+        >
+          <Edit className="w-3 h-3" /> Edit
+        </button>
+      </div>
     </div>
   );
 }
@@ -247,36 +359,44 @@ export default function Admin() {
   ];
 
   return (
-    <div className="animate-in fade-in duration-500 pb-20 max-w-7xl mx-auto">
+    <div className="animate-in fade-in duration-500 pb-28 lg:pb-20 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="p-2.5 sm:p-3 bg-gradient-to-br from-red-500/20 to-purple-500/20 text-red-500 rounded-xl border border-red-500/20">
-            <Shield className="w-5 h-5 sm:w-6 sm:h-6" />
+      <div className="flex items-center justify-between gap-3 mb-5 sm:mb-7">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="p-2 sm:p-3 bg-gradient-to-br from-red-500/20 to-purple-500/20 rounded-xl border border-red-500/20 shrink-0">
+            <Shield className="w-4 h-4 sm:w-6 sm:h-6 text-red-400" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-red-500 to-purple-500 bg-clip-text text-transparent">Pro Admin Engine</h1>
-            <p className="text-muted-foreground text-[10px] sm:text-sm uppercase tracking-widest font-bold mt-0.5">Total System Control</p>
+            <h1 className="text-xl sm:text-2xl font-black bg-gradient-to-r from-red-400 to-purple-400 bg-clip-text text-transparent tracking-tight">Admin Engine</h1>
+            <p className="text-white/30 text-[8px] sm:text-[10px] uppercase tracking-[0.25em] font-black">System Control</p>
           </div>
         </div>
-        <button onClick={fetchAdminData} disabled={loading} className="px-4 py-2.5 sm:px-5 sm:py-2.5 bg-card border border-border shadow-sm rounded-xl hover:bg-muted font-bold text-xs sm:text-sm transition-all flex items-center gap-2 disabled:opacity-50">
-          <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${loading ? 'animate-spin text-primary' : ''}`} /> <span className="hidden xs:inline">Sync Data</span>
+        <button
+          type="button"
+          onClick={fetchAdminData}
+          disabled={loading}
+          className="h-9 px-3.5 sm:px-5 bg-white/[0.05] border border-white/[0.09] rounded-xl font-black text-[10px] text-white/60 hover:text-white hover:bg-white/[0.09] transition-all flex items-center gap-2 disabled:opacity-40 tap-feedback shrink-0"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-primary' : ''}`} />
+          <span className="hidden sm:inline">Sync</span>
         </button>
       </div>
 
-      {/* Tabs - Scrollable on mobile */}
-      <div className="flex overflow-x-auto gap-1.5 mb-6 sm:mb-8 bg-card/60 p-1.5 sm:p-2 rounded-2xl border border-border backdrop-blur-sm shadow-sm no-scrollbar scrollbar-hide">
+      {/* Tabs — icon-only on tiny screens, label on sm+ */}
+      <div className="flex overflow-x-auto gap-1 mb-5 sm:mb-7 bg-white/[0.03] p-1 rounded-2xl border border-white/[0.07] no-scrollbar scrollbar-hide">
         {TABS.map(tab => (
           <button
             key={tab.id}
+            type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-shrink-0 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 text-[10px] sm:text-sm font-bold transition-all whitespace-nowrap ${
+            className={`flex-shrink-0 px-3 sm:px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 text-[9px] sm:text-[11px] font-black transition-all whitespace-nowrap tap-feedback ${
               activeTab === tab.id
-                ? 'bg-primary text-white shadow-lg scale-[1.02] shadow-primary/20 ring-1 ring-primary/50'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                : 'text-white/35 hover:text-white/70 hover:bg-white/[0.05]'
             }`}
           >
-            <tab.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {tab.label}
+            <tab.icon className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden sm:inline">{tab.label}</span>
           </button>
         ))}
       </div>
@@ -302,20 +422,20 @@ export default function Admin() {
       {activeTab === 'analytics' && (
         <div className="space-y-6 animate-in slide-in-from-left-4 duration-500">
           {/* Period selector */}
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Period:</span>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground shrink-0">Period:</span>
             {[7, 14, 30, 90].map(d => (
               <button
                 key={d}
                 onClick={() => { setAnalyticsDays(d); fetchAnalytics(d); }}
-                className={`px-4 py-2 rounded-xl text-[11px] font-black transition-all ${
+                className={`px-3 sm:px-4 py-2 rounded-xl text-[10px] sm:text-[11px] font-black transition-all tap-feedback ${
                   analyticsDays === d ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white/5 text-muted-foreground hover:bg-white/10'
                 }`}
               >
                 {d}D
               </button>
             ))}
-            <button onClick={() => fetchAnalytics(analyticsDays)} className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all">
+            <button onClick={() => fetchAnalytics(analyticsDays)} className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all tap-feedback ml-auto sm:ml-0">
               <RefreshCw className={`w-4 h-4 ${analyticsLoading ? 'animate-spin text-primary' : 'text-muted-foreground'}`} />
             </button>
           </div>
@@ -452,72 +572,83 @@ export default function Admin() {
         </div>
       )}
 
-      {/* ── ORDERS (with bulk management) ──────────────────────────────────── */}
+      {/* ── ORDERS ─────────────────────────────────────────────────────────── */}
       {activeTab === 'orders' && (
-        <div className="space-y-4 animate-in slide-in-from-left-4 duration-500">
-          {/* Search + bulk toolbar */}
-          <div className="bg-card border border-border rounded-[2rem] p-4 flex flex-col md:flex-row md:items-center gap-4">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search by email or order ID..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2.5 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 w-full shadow-sm"
-              />
-            </div>
-
-            {selectedOrders.size > 0 && (
-              <div className="flex items-center gap-2 animate-in slide-in-from-right-2 duration-200">
-                <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest px-3 py-2 bg-white/5 rounded-xl">
-                  {selectedOrders.size} selected
-                </span>
-                <button
-                  onClick={() => bulkAction('complete')}
-                  disabled={bulkLoading}
-                  className="px-3 py-2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-xl text-[11px] font-black hover:bg-emerald-500 hover:text-white transition-all flex items-center gap-1.5"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Complete
-                </button>
-                <button
-                  onClick={() => bulkAction('cancel')}
-                  disabled={bulkLoading}
-                  className="px-3 py-2 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-xl text-[11px] font-black hover:bg-amber-500 hover:text-white transition-all flex items-center gap-1.5"
-                >
-                  <XCircle className="w-3.5 h-3.5" /> Cancel
-                </button>
-                <button
-                  onClick={() => bulkAction('refund')}
-                  disabled={bulkLoading}
-                  className="px-3 py-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-[11px] font-black hover:bg-red-500 hover:text-white transition-all flex items-center gap-1.5"
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> Refund
-                </button>
-                <button
-                  onClick={() => setSelectedOrders(new Set())}
-                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-muted-foreground"
-                >
-                  <XCircle className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+        <div className="space-y-3 sm:space-y-4 animate-in slide-in-from-left-4 duration-500">
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
+            <input
+              type="text"
+              placeholder="Search email or order ID…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 text-sm bg-white/[0.04] border border-white/[0.09] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/40 font-bold placeholder:text-white/25 text-white"
+            />
           </div>
 
-          {/* Orders table */}
-          <div className="bg-card border border-border rounded-[2rem] overflow-hidden shadow-lg">
-            <div className="p-5 border-b border-border/50 bg-muted/20 flex items-center justify-between">
-              <h2 className="font-bold text-lg flex items-center gap-3">
-                <ListOrdered className="w-5 h-5 text-primary" /> Global Orders ({filteredOrders.length})
-              </h2>
+          {/* Bulk toolbar — shows when items selected */}
+          {selectedOrders.size > 0 && (
+            <div className="flex items-center gap-2 p-3 bg-primary/8 border border-primary/20 rounded-2xl overflow-x-auto no-scrollbar animate-in slide-in-from-top-2 duration-200">
+              <span className="text-[10px] font-black text-primary uppercase tracking-widest shrink-0">
+                {selectedOrders.size} sel.
+              </span>
+              <button onClick={() => bulkAction('complete')} disabled={bulkLoading}
+                className="h-8 px-3 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 rounded-xl text-[10px] font-black hover:bg-emerald-500 hover:text-white transition-all flex items-center gap-1.5 shrink-0 tap-feedback"
+              ><CheckCircle2 className="w-3 h-3" /> Done</button>
+              <button onClick={() => bulkAction('cancel')} disabled={bulkLoading}
+                className="h-8 px-3 bg-amber-500/10 text-amber-400 border border-amber-500/25 rounded-xl text-[10px] font-black hover:bg-amber-500 hover:text-white transition-all flex items-center gap-1.5 shrink-0 tap-feedback"
+              ><XCircle className="w-3 h-3" /> Cancel</button>
+              <button onClick={() => bulkAction('refund')} disabled={bulkLoading}
+                className="h-8 px-3 bg-red-500/10 text-red-400 border border-red-500/25 rounded-xl text-[10px] font-black hover:bg-red-500 hover:text-white transition-all flex items-center gap-1.5 shrink-0 tap-feedback"
+              ><Trash2 className="w-3 h-3" /> Refund</button>
+              <button onClick={() => setSelectedOrders(new Set())}
+                className="h-8 w-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center shrink-0 tap-feedback ml-auto"
+              ><XCircle className="w-3.5 h-3.5 text-white/40" /></button>
+            </div>
+          )}
+
+          {/* Orders card */}
+          <div className="bg-card border border-border rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-lg">
+            <div className="px-4 sm:px-6 py-4 border-b border-border/50 bg-muted/20 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={toggleSelectAll} className="tap-feedback">
+                  {selectedOrders.size === filteredOrders.length && filteredOrders.length > 0
+                    ? <CheckSquare className="w-4 h-4 text-primary" />
+                    : <Square className="w-4 h-4 text-muted-foreground" />
+                  }
+                </button>
+                <h2 className="font-black text-sm sm:text-base flex items-center gap-2">
+                  <ListOrdered className="w-4 h-4 text-primary" /> Orders
+                  <span className="text-white/30">({filteredOrders.length})</span>
+                </h2>
+              </div>
               {bulkLoading && <RefreshCw className="w-4 h-4 animate-spin text-primary" />}
             </div>
-            <div className="table-responsive">
-              <table className="w-full text-sm text-left min-w-[800px]">
+
+            {/* Mobile card list */}
+            <div className="md:hidden divide-y divide-border/40 max-h-[60vh] overflow-y-auto scrollbar-hide">
+              {filteredOrders.map((o: any) => (
+                <OrderCard
+                  key={o.id}
+                  order={o}
+                  user={users.find((u: any) => u.id === o.user_id)}
+                  selected={selectedOrders.has(o.id)}
+                  onToggle={() => toggleOrder(o.id)}
+                />
+              ))}
+              {filteredOrders.length === 0 && (
+                <p className="py-16 text-center text-white/20 text-xs font-black uppercase tracking-widest">No orders found.</p>
+              )}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block table-responsive">
+              <table className="w-full text-sm text-left min-w-[700px]">
                 <thead className="text-[10px] uppercase bg-muted/40 text-muted-foreground font-black tracking-widest">
                   <tr>
                     <th className="px-4 py-4">
-                      <button onClick={toggleSelectAll} className="p-1 hover:text-primary transition-colors">
+                      <button type="button" onClick={toggleSelectAll} className="p-1 hover:text-primary transition-colors">
                         {selectedOrders.size === filteredOrders.length && filteredOrders.length > 0
                           ? <CheckSquare className="w-4 h-4 text-primary" />
                           : <Square className="w-4 h-4" />
@@ -534,37 +665,20 @@ export default function Admin() {
                 <tbody className="divide-y divide-border/50">
                   {filteredOrders.map((o: any) => (
                     <tr key={o.id} className={`hover:bg-muted/30 transition-colors ${selectedOrders.has(o.id) ? 'bg-primary/5' : ''}`}>
-                      <td className="px-4 py-4">
-                        <button onClick={() => toggleOrder(o.id)} className="p-1 hover:text-primary transition-colors">
-                          {selectedOrders.has(o.id)
-                            ? <CheckSquare className="w-4 h-4 text-primary" />
-                            : <Square className="w-4 h-4 text-muted-foreground" />
-                          }
+                      <td className="px-4 py-3">
+                        <button type="button" onClick={() => toggleOrder(o.id)} className="p-1 hover:text-primary transition-colors tap-feedback">
+                          {selectedOrders.has(o.id) ? <CheckSquare className="w-4 h-4 text-primary" /> : <Square className="w-4 h-4 text-muted-foreground" />}
                         </button>
                       </td>
-                      <td className="px-4 py-4 font-mono text-xs opacity-60 whitespace-nowrap">#{o.id.substring(0, 8)}</td>
-                      <td className="px-4 py-4 text-xs font-bold">{users.find(u => u.id === o.user_id)?.email || o.user_id?.substring(0, 8)}</td>
-                      <td className="px-4 py-4 text-xs">
-                        <div className="font-black whitespace-nowrap">#{o.service_id}</div>
-                        <div className="text-muted-foreground">qty: <span className="font-mono text-primary">{o.quantity || '—'}</span></div>
-                      </td>
-                      <td className="px-4 py-4 font-black text-destructive text-sm whitespace-nowrap">{o.cost ? `$${Number(o.cost).toFixed(3)}` : '—'}</td>
-                      <td className="px-4 py-4 text-right">
-                        <span
-                          className="inline-flex px-3 py-1.5 rounded-lg text-[10px] uppercase font-black tracking-wider border whitespace-nowrap"
-                          style={{
-                            backgroundColor: (STATUS_COLORS[o.status] || '#888') + '18',
-                            color:            STATUS_COLORS[o.status] || '#888',
-                            borderColor:      (STATUS_COLORS[o.status] || '#888') + '40',
-                          }}
-                        >
-                          {o.status || 'pending'}
-                        </span>
-                      </td>
+                      <td className="px-4 py-3 font-mono text-xs opacity-50">#{o.id.substring(0, 8)}</td>
+                      <td className="px-4 py-3 text-xs font-bold max-w-[160px] truncate">{users.find((u: any) => u.id === o.user_id)?.email || o.user_id?.substring(0, 8)}</td>
+                      <td className="px-4 py-3 text-xs"><span className="font-black">#{o.service_id}</span> <span className="text-muted-foreground">·{o.quantity || '—'}</span></td>
+                      <td className="px-4 py-3 font-black text-destructive text-sm">{o.cost ? `$${Number(o.cost).toFixed(2)}` : '—'}</td>
+                      <td className="px-4 py-3 text-right"><StatusPill status={o.status} /></td>
                     </tr>
                   ))}
                   {filteredOrders.length === 0 && (
-                    <tr><td colSpan={6} className="py-20 text-center text-muted-foreground font-bold">No orders found.</td></tr>
+                    <tr><td colSpan={6} className="py-16 text-center text-muted-foreground font-bold">No orders found.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -575,133 +689,160 @@ export default function Admin() {
 
       {/* ── USERS ──────────────────────────────────────────────────────────── */}
       {activeTab === 'users' && (
-        <div className="bg-card border border-border rounded-[2rem] overflow-hidden shadow-lg animate-in slide-in-from-left-4 duration-500">
-          <div className="p-6 border-b border-border/50 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-muted/20">
-            <h2 className="font-bold text-xl flex items-center gap-3"><UsersIcon className="w-6 h-6 text-primary" /> User Accounts ({users.length})</h2>
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search by email..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2.5 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 w-full md:w-72 shadow-sm"
-              />
-            </div>
+        <div className="space-y-3 animate-in slide-in-from-left-4 duration-500">
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
+            <input
+              type="text"
+              placeholder="Search by email…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 text-sm bg-white/[0.04] border border-white/[0.09] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/40 font-bold placeholder:text-white/25 text-white"
+            />
           </div>
-          <div className="table-responsive">
-            <table className="w-full text-sm text-left min-w-[800px]">
-              <thead className="text-[10px] uppercase bg-muted/40 text-muted-foreground font-black tracking-widest">
-                <tr>
-                  <th className="px-4 py-5">User</th>
-                  <th className="px-4 py-5">Role</th>
-                  <th className="px-4 py-5">Referral Code</th>
-                  <th className="px-4 py-5">Balance</th>
-                  <th className="px-4 py-5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50">
-                {filteredUsers.map((u: any) => (
-                  <tr key={u.id} className="hover:bg-muted/30 transition-colors group">
-                    <td className="px-4 py-5">
-                      <p className="font-bold">{u.email || 'No email'}</p>
-                      <p className="font-mono text-[10px] text-muted-foreground opacity-50 mt-1">ID: {u.id}</p>
-                    </td>
-                    <td className="px-4 py-5 whitespace-nowrap">
-                      <span className={`px-3 py-1.5 rounded-lg text-[10px] uppercase font-bold tracking-wider ${
-                        u.role === 'admin' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
-                      }`}>{u.role || 'user'}</span>
-                    </td>
-                    <td className="px-4 py-5 whitespace-nowrap">
-                      <span className="font-mono text-[11px] text-amber-400 font-black">{u.referral_code || '—'}</span>
-                    </td>
-                    <td className="px-4 py-5 whitespace-nowrap">
-                      <span className="font-black text-emerald-500 text-lg">${Number(u.balance || 0).toFixed(2)}</span>
-                    </td>
-                    <td className="px-4 py-5 text-right">
-                      <button
-                        onClick={() => updateBalance(u.id, Number(u.balance || 0))}
-                        className="px-4 py-2 bg-background border border-border hover:border-primary hover:text-primary rounded-xl transition-all flex items-center gap-2 ml-auto text-xs font-bold shadow-sm whitespace-nowrap"
-                      >
-                        <Edit className="w-3.5 h-3.5" /> Adjust
-                      </button>
-                    </td>
+
+          <div className="bg-card border border-border rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-lg">
+            <div className="px-4 sm:px-6 py-4 border-b border-border/50 bg-muted/20 flex items-center justify-between">
+              <h2 className="font-black text-sm sm:text-base flex items-center gap-2">
+                <UsersIcon className="w-4 h-4 text-primary" /> Users
+                <span className="text-white/30">({filteredUsers.length})</span>
+              </h2>
+            </div>
+
+            {/* Mobile card list */}
+            <div className="md:hidden divide-y divide-border/40 max-h-[65vh] overflow-y-auto scrollbar-hide">
+              {filteredUsers.map((u: any) => (
+                <UserCard key={u.id} u={u} onEdit={() => updateBalance(u.id, Number(u.balance || 0))} />
+              ))}
+              {filteredUsers.length === 0 && (
+                <p className="py-16 text-center text-white/20 text-xs font-black uppercase tracking-widest">No users found.</p>
+              )}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block table-responsive">
+              <table className="w-full text-sm text-left min-w-[700px]">
+                <thead className="text-[10px] uppercase bg-muted/40 text-muted-foreground font-black tracking-widest">
+                  <tr>
+                    <th className="px-4 py-4">User</th>
+                    <th className="px-4 py-4">Role</th>
+                    <th className="px-4 py-4">Referral</th>
+                    <th className="px-4 py-4">Balance</th>
+                    <th className="px-4 py-4 text-right">Action</th>
                   </tr>
-                ))}
-                {filteredUsers.length === 0 && <tr><td colSpan={5} className="py-20 text-center text-muted-foreground font-bold">No users found.</td></tr>}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {filteredUsers.map((u: any) => (
+                    <tr key={u.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-4">
+                        <p className="font-bold text-sm">{u.email || 'No email'}</p>
+                        <p className="font-mono text-[9px] text-muted-foreground opacity-40">{u.id.substring(0, 12)}</p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className={`px-2.5 py-1 rounded-lg text-[9px] uppercase font-black tracking-wider ${
+                          u.role === 'admin' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                        }`}>{u.role || 'user'}</span>
+                      </td>
+                      <td className="px-4 py-4 font-mono text-[10px] text-amber-400 font-black">{u.referral_code || '—'}</td>
+                      <td className="px-4 py-4 font-black text-emerald-400 text-base">${Number(u.balance || 0).toFixed(2)}</td>
+                      <td className="px-4 py-4 text-right">
+                        <button onClick={() => updateBalance(u.id, Number(u.balance || 0))}
+                          className="h-8 px-3 bg-white/5 border border-white/10 hover:border-primary hover:text-primary rounded-xl transition-all text-xs font-black flex items-center gap-1.5 ml-auto tap-feedback"
+                        ><Edit className="w-3 h-3" /> Adjust</button>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredUsers.length === 0 && <tr><td colSpan={5} className="py-16 text-center text-muted-foreground">No users found.</td></tr>}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
       {/* ── DEPOSITS ───────────────────────────────────────────────────────── */}
       {activeTab === 'deposits' && (
-        <div className="space-y-4 animate-in slide-in-from-left-4 duration-500">
-          {/* Auto-approve notice */}
+        <div className="space-y-3 sm:space-y-4 animate-in slide-in-from-left-4 duration-500">
           {autoThreshold > 0 && (
-            <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-5 py-3">
-              <Zap className="w-4 h-4 text-emerald-500 shrink-0" />
-              <p className="text-[11px] font-black text-emerald-400">
-                Auto-approve active — deposits ≤ ${autoThreshold} are approved instantly.
+            <div className="flex items-center gap-2.5 bg-emerald-500/8 border border-emerald-500/20 rounded-2xl px-4 py-3">
+              <Zap className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <p className="text-[10px] font-black text-emerald-400">
+                Auto-approve ON — deposits ≤ ${autoThreshold} instant.
               </p>
             </div>
           )}
 
-          <div className="bg-card border border-border rounded-[2rem] overflow-hidden shadow-lg">
-            <div className="p-6 border-b border-border/50 bg-muted/20">
-              <h2 className="font-bold text-xl flex items-center gap-3"><Clock className="w-6 h-6 text-primary" /> Deposits Ledger</h2>
-              <p className="text-muted-foreground text-sm mt-1">Approve or reject deposit requests</p>
+          <div className="bg-card border border-border rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-lg">
+            <div className="px-4 sm:px-6 py-4 border-b border-border/50 bg-muted/20 flex items-center justify-between">
+              <h2 className="font-black text-sm sm:text-base flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary" /> Deposits
+                <span className="text-white/30">({deposits.length})</span>
+              </h2>
+              {deposits.filter((d: any) => d.status === 'pending').length > 0 && (
+                <span className="text-[9px] font-black bg-amber-500/15 text-amber-400 border border-amber-500/25 px-2.5 py-1 rounded-full">
+                  {deposits.filter((d: any) => d.status === 'pending').length} pending
+                </span>
+              )}
             </div>
-            <div className="table-responsive">
-              <table className="w-full text-sm text-left min-w-[900px]">
+
+            {/* Mobile card list (primary view) */}
+            <div className="md:hidden divide-y divide-border/40 max-h-[70vh] overflow-y-auto scrollbar-hide">
+              {deposits.map((dep: any) => (
+                <DepositCard
+                  key={dep.id}
+                  dep={dep}
+                  userEmail={users.find((u: any) => u.id === dep.user_id)?.email}
+                  onApprove={() => handleDeposit(dep.id, 'approve')}
+                  onDeny={() => handleDeposit(dep.id, 'reject')}
+                />
+              ))}
+              {deposits.length === 0 && (
+                <p className="py-16 text-center text-white/20 text-xs font-black uppercase tracking-widest">No deposit requests.</p>
+              )}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block table-responsive">
+              <table className="w-full text-sm text-left min-w-[700px]">
                 <thead className="text-[10px] uppercase bg-muted/40 text-muted-foreground font-black tracking-widest">
                   <tr>
-                    <th className="px-4 py-5">User</th>
-                    <th className="px-4 py-5">Amount</th>
-                    <th className="px-4 py-5">Proof</th>
-                    <th className="px-4 py-5">Status</th>
-                    <th className="px-4 py-5 text-right">Actions</th>
+                    <th className="px-4 py-4">User</th>
+                    <th className="px-4 py-4">Amount</th>
+                    <th className="px-4 py-4">Method / Proof</th>
+                    <th className="px-4 py-4">Status</th>
+                    <th className="px-4 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
                   {deposits.map((dep: any) => (
                     <tr key={dep.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-5">
-                        <span className="font-bold block mb-1">{users.find(u => u.id === dep.user_id)?.email || 'N/A'}</span>
-                        <span className="font-mono text-[10px] text-muted-foreground opacity-50">{dep.user_id?.substring(0, 8)}</span>
+                      <td className="px-4 py-4">
+                        <p className="font-bold text-sm">{users.find((u: any) => u.id === dep.user_id)?.email || 'N/A'}</p>
+                        <p className="font-mono text-[9px] text-muted-foreground opacity-40">{dep.user_id?.substring(0, 12)}</p>
                       </td>
-                      <td className="px-4 py-5 font-black text-emerald-500 text-lg whitespace-nowrap">+${Number(dep.amount).toFixed(2)}</td>
-                      <td className="px-4 py-5 text-xs">
-                        <div className="font-black uppercase tracking-wider mb-1 whitespace-nowrap">{dep.method}</div>
-                        <a href={dep.proof} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-400 font-bold underline text-[11px] truncate block max-w-[120px]">
-                          View Proof
-                        </a>
+                      <td className="px-4 py-4 font-black text-emerald-400 text-base">+${Number(dep.amount).toFixed(2)}</td>
+                      <td className="px-4 py-4 text-xs">
+                        <p className="font-black uppercase tracking-wider">{dep.method}</p>
+                        {dep.proof && <a href={dep.proof} target="_blank" rel="noreferrer" className="text-blue-400 underline text-[10px]">View Proof ↗</a>}
                       </td>
-                      <td className="px-4 py-5 whitespace-nowrap">
-                        <span className={`px-3 py-1.5 rounded-lg text-[10px] uppercase font-black tracking-wider border ${
-                          dep.status === 'pending'  ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
-                          dep.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
-                          'bg-red-500/10 text-red-500 border-red-500/20'
-                        }`}>{dep.status}</span>
-                      </td>
-                      <td className="px-4 py-5 text-right">
+                      <td className="px-4 py-4"><StatusPill status={dep.status} /></td>
+                      <td className="px-4 py-4 text-right">
                         {dep.status === 'pending' ? (
-                          <div className="flex items-center justify-end gap-2 flex-wrap">
-                            <button onClick={() => handleDeposit(dep.id, 'approve')} className="px-3 py-2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white rounded-xl transition-all font-bold text-xs flex items-center gap-1.5 whitespace-nowrap">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Approve
-                            </button>
-                            <button onClick={() => handleDeposit(dep.id, 'reject')} className="px-3 py-2 bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white rounded-xl transition-all font-bold text-xs flex items-center gap-1.5 whitespace-nowrap">
-                              <XCircle className="w-3.5 h-3.5" /> Deny
-                            </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button onClick={() => handleDeposit(dep.id, 'approve')}
+                              className="h-8 px-3 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white rounded-xl transition-all text-[10px] font-black flex items-center gap-1.5 tap-feedback"
+                            ><CheckCircle2 className="w-3 h-3" /> Approve</button>
+                            <button onClick={() => handleDeposit(dep.id, 'reject')}
+                              className="h-8 px-3 bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white rounded-xl transition-all text-[10px] font-black flex items-center gap-1.5 tap-feedback"
+                            ><XCircle className="w-3 h-3" /> Deny</button>
                           </div>
                         ) : (
-                          <span className="text-muted-foreground text-xs font-bold uppercase tracking-widest opacity-50">Executed</span>
+                          <span className="text-white/25 text-[9px] font-black uppercase">Done</span>
                         )}
                       </td>
                     </tr>
                   ))}
-                  {deposits.length === 0 && <tr><td colSpan={5} className="py-20 text-center text-muted-foreground font-bold">No deposit requests.</td></tr>}
+                  {deposits.length === 0 && <tr><td colSpan={5} className="py-16 text-center text-muted-foreground">No deposits.</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -711,16 +852,16 @@ export default function Admin() {
 
       {/* ── SETTINGS ───────────────────────────────────────────────────────── */}
       {activeTab === 'settings' && (
-        <div className="space-y-6 animate-in slide-in-from-left-4 duration-500">
+        <div className="space-y-4 sm:space-y-6 animate-in slide-in-from-left-4 duration-500">
 
           {/* ── AUTO-APPROVE ── */}
-          <div className="bg-card border border-border rounded-[2rem] p-8">
-            <h2 className="font-black text-xl flex items-center gap-3 mb-2">
-              <Zap className="w-6 h-6 text-emerald-500" /> Auto-Approve Deposits
+          <div className="bg-card border border-border rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-8">
+            <h2 className="font-black text-lg sm:text-xl flex items-center gap-2 sm:gap-3 mb-2">
+              <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" /> Auto-Approve Deposits
             </h2>
-            <p className="text-muted-foreground text-sm mb-6">Any deposit ≤ threshold is approved instantly with no manual review.</p>
+            <p className="text-muted-foreground text-sm mb-5 sm:mb-6">Any deposit ≤ threshold is approved instantly with no manual review.</p>
 
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
                 <span className="text-xl font-bold text-muted-foreground">$</span>
                 <input
@@ -729,7 +870,7 @@ export default function Admin() {
                   min={0}
                   step={5}
                   onChange={e => setAutoThreshold(Number(e.target.value))}
-                  className="px-4 py-3 border border-border rounded-xl bg-background w-32 font-mono text-lg focus:ring-2 focus:ring-emerald-500"
+                  className="px-4 py-3 border border-border rounded-xl bg-background w-28 font-mono text-lg focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
               <button
@@ -739,10 +880,10 @@ export default function Admin() {
                   setSavingThreshold(false);
                 }}
                 disabled={savingThreshold}
-                className="px-6 py-3 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+                className="px-5 sm:px-6 py-3 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20 disabled:opacity-50 tap-feedback"
               >
                 {savingThreshold ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                Save Threshold
+                Save
               </button>
             </div>
 
@@ -753,14 +894,14 @@ export default function Admin() {
           </div>
 
           {/* ── JAP SYNC ── */}
-          <div className="bg-card border border-border rounded-[2rem] p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="bg-card border border-border rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-8 flex flex-col gap-5">
             <div>
-              <h3 className="font-black text-lg mb-3">JAP — Profit Margin (%)</h3>
-              <div className="flex items-center gap-2">
+              <h3 className="font-black text-base sm:text-lg mb-3">JAP — Profit Margin (%)</h3>
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xl font-bold">+</span>
-                <input type="number" value={japMarkup} onChange={e => setJapMarkup(Number(e.target.value))} className="px-4 py-3 border border-border rounded-xl bg-background w-32 font-mono text-lg focus:ring-2 focus:ring-primary" />
+                <input type="number" value={japMarkup} onChange={e => setJapMarkup(Number(e.target.value))} className="px-4 py-3 border border-border rounded-xl bg-background w-28 font-mono text-lg focus:ring-2 focus:ring-primary" />
                 <span className="text-xl font-bold">%</span>
-                <button onClick={() => saveSetting('jap_markup', japMarkup)} className="ms-4 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-lg text-xs font-bold hover:bg-primary hover:text-white transition-all">Save</button>
+                <button onClick={() => saveSetting('jap_markup', japMarkup)} className="ms-2 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-lg text-xs font-bold hover:bg-primary hover:text-white transition-all tap-feedback">Save</button>
               </div>
             </div>
             <button
@@ -785,21 +926,21 @@ export default function Admin() {
                 setLoading(false);
               }}
               disabled={loading}
-              className="px-8 py-4 bg-primary text-primary-foreground font-black rounded-2xl hover:opacity-90 hover:scale-105 transition-all flex items-center gap-3 shadow-xl shadow-primary/20"
+              className="w-full sm:w-auto sm:self-start px-6 sm:px-8 py-3.5 sm:py-4 bg-primary text-primary-foreground font-black rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-xl shadow-primary/20 tap-feedback"
             >
-              <RefreshCw className={`w-6 h-6 ${loading ? 'animate-spin' : ''}`} /> Sync JAP
+              <RefreshCw className={`w-5 h-5 sm:w-6 sm:h-6 ${loading ? 'animate-spin' : ''}`} /> Sync JAP Services
             </button>
           </div>
 
           {/* ── SAHL CASH SYNC ── */}
-          <div className="bg-gradient-to-br from-emerald-500/5 to-blue-500/5 border border-emerald-500/20 rounded-[2rem] p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="bg-gradient-to-br from-emerald-500/5 to-blue-500/5 border border-emerald-500/20 rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-8 flex flex-col gap-5">
             <div>
-              <h3 className="font-black text-lg mb-3">🎮 Sahl Cash — Markup (%)</h3>
-              <div className="flex items-center gap-2">
+              <h3 className="font-black text-base sm:text-lg mb-3">🎮 Sahl Cash — Markup (%)</h3>
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xl font-bold">+</span>
-                <input type="number" value={sahlMarkup} onChange={e => setSahlMarkup(Number(e.target.value))} className="px-4 py-3 border border-border rounded-xl bg-background w-32 font-mono text-lg focus:ring-2 focus:ring-emerald-500" />
+                <input type="number" value={sahlMarkup} onChange={e => setSahlMarkup(Number(e.target.value))} className="px-4 py-3 border border-border rounded-xl bg-background w-28 font-mono text-lg focus:ring-2 focus:ring-emerald-500" />
                 <span className="text-xl font-bold">%</span>
-                <button onClick={() => saveSetting('sahl_markup', sahlMarkup)} className="ms-4 px-4 py-2 bg-emerald-600/10 text-emerald-600 border border-emerald-500/20 rounded-lg text-xs font-bold hover:bg-emerald-600 hover:text-white transition-all">Save</button>
+                <button onClick={() => saveSetting('sahl_markup', sahlMarkup)} className="ms-2 px-4 py-2 bg-emerald-600/10 text-emerald-600 border border-emerald-500/20 rounded-lg text-xs font-bold hover:bg-emerald-600 hover:text-white transition-all tap-feedback">Save</button>
               </div>
             </div>
             <button
@@ -824,9 +965,9 @@ export default function Admin() {
                 setLoading(false);
               }}
               disabled={loading}
-              className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-blue-500 text-white font-black rounded-2xl hover:opacity-90 hover:scale-105 transition-all flex items-center gap-3 shadow-xl shadow-emerald-500/20"
+              className="w-full sm:w-auto sm:self-start px-6 sm:px-8 py-3.5 sm:py-4 bg-gradient-to-r from-emerald-500 to-blue-500 text-white font-black rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-xl shadow-emerald-500/20 tap-feedback"
             >
-              <RefreshCw className={`w-6 h-6 ${loading ? 'animate-spin' : ''}`} /> Sync Sahl Cash
+              <RefreshCw className={`w-5 h-5 sm:w-6 sm:h-6 ${loading ? 'animate-spin' : ''}`} /> Sync Sahl Cash
             </button>
           </div>
         </div>

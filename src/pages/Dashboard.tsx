@@ -52,6 +52,7 @@ export default function Dashboard() {
   const [txFilter, setTxFilter] = useState<'all' | 'credit' | 'debit'>('all')
   const [txLimit, setTxLimit] = useState(15)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [rechargeSuccess, setRechargeSuccess] = useState(false)
 
   // Animated balance delta
   const [balanceDelta, setBalanceDelta] = useState<number | null>(null)
@@ -237,9 +238,13 @@ export default function Dashboard() {
       if (error) throw error
 
       toast.success('Request Sent! Admin will verify your receipt shortly.')
-      setShowTopUp(false)
-      setTopUpAmount('')
-      setSelectedFile(null)
+      setRechargeSuccess(true)
+      setTimeout(() => {
+        setShowTopUp(false)
+        setRechargeSuccess(false)
+        setTopUpAmount('')
+        setSelectedFile(null)
+      }, 2000)
       void queryClient.invalidateQueries({ queryKey: ['topups', user?.id] })
     } catch (err: any) {
       toast.error(err.message || 'Failed to submit request.')
@@ -461,92 +466,159 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* WHISH RECHARGE MODAL */}
+      {/* WHISH RECHARGE — PREMIUM BOTTOM SHEET */}
       {showTopUp && (
         <div
-          className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[100] flex items-center justify-center p-6 animate-in fade-in zoom-in duration-300"
-          onClick={() => setShowTopUp(false)}
+          className="fixed inset-0 z-[100] flex flex-col justify-end sm:items-center sm:justify-center animate-in fade-in duration-200"
+          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(20px)' }}
+          onClick={() => !submitting && setShowTopUp(false)}
         >
           <div
-            className="bg-[#0a0a0a] border border-white/10 rounded-[2rem] sm:rounded-[3rem] max-w-md w-full p-6 sm:p-10 space-y-6 sm:space-y-8 shadow-[0_0_100px_rgba(16,185,129,0.1)] max-h-[92dvh] overflow-y-auto scrollbar-hide"
+            className="relative w-full sm:max-w-md bg-[#0a0a0a] border border-white/[0.09] rounded-t-[2rem] sm:rounded-[2rem] shadow-[0_-8px_60px_rgba(0,0,0,0.6)] overflow-hidden animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between">
-              <div className="p-3 bg-white/[0.03] rounded-2xl border border-white/10 shadow-inner group overflow-hidden">
-                <img src="/assets/whish-logo.png" alt="Whish Money" className="w-8 h-8 object-contain group-hover:scale-110 transition-transform duration-500" />
-              </div>
-              <button onClick={() => setShowTopUp(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-                <X className="w-6 h-6 text-muted-foreground" />
-              </button>
+            {/* Drag pill — mobile only */}
+            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="w-10 h-1 rounded-full bg-white/20" />
             </div>
 
-            <div className="space-y-2 text-center">
-              <h2 className="text-3xl font-black tracking-tighter italic">Recharge via Whish</h2>
-              <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest">SEND TRANSFER TO THE NUMBER BELOW</p>
-            </div>
+            <div className="px-5 sm:px-8 pb-8 pt-4 sm:pt-8 space-y-5 max-h-[92dvh] overflow-y-auto scrollbar-hide">
 
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 text-center space-y-4">
-              <div className="flex flex-col items-center gap-4">
-                <span className="text-4xl font-black tracking-widest font-mono text-foreground">{WHISH_NUMBER}</span>
-                <button
-                  onClick={copyNumber}
-                  className="flex items-center gap-2 bg-emerald-600/20 text-emerald-500 py-2 px-6 rounded-full text-[10px] font-black border border-emerald-500/30 hover:bg-emerald-600/30 transition-all"
-                >
-                  {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                  {copied ? 'COPIED' : 'COPY NUMBER'}
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">How much did you send? ($)</label>
-                <Input
-                  type="number"
-                  placeholder="Ex: 50"
-                  value={topUpAmount}
-                  onChange={(e) => setTopUpAmount(e.target.value)}
-                  className="h-14 bg-white/5 border-white/10 rounded-2xl px-6 text-lg font-black"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Upload Proof (Screenshot)</label>
-                <div className="relative group/file">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                  />
-                  <div className={`h-24 bg-white/5 border border-dashed rounded-2xl flex flex-col items-center justify-center gap-2 transition-all group-hover/file:bg-white/[0.08] ${selectedFile ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-white/10'}`}>
-                    {selectedFile ? (
-                      <>
-                        <FileText className="w-6 h-6 text-emerald-500" />
-                        <span className="text-[10px] font-black text-emerald-500 uppercase truncate px-4">{selectedFile.name}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-6 h-6 text-muted-foreground" />
-                        <span className="text-[10px] font-black text-muted-foreground uppercase">{t('clickToUpload')}</span>
-                      </>
-                    )}
+              {/* ── SUCCESS STATE ── */}
+              {rechargeSuccess ? (
+                <div className="flex flex-col items-center justify-center gap-4 py-12 animate-in zoom-in-95 fade-in duration-300">
+                  <div className="w-20 h-20 rounded-full bg-emerald-500/15 border-2 border-emerald-500/40 flex items-center justify-center">
+                    <Check className="w-10 h-10 text-emerald-400" strokeWidth={3} />
+                  </div>
+                  <div className="text-center space-y-1">
+                    <p className="text-2xl font-black tracking-tighter text-white">Request Sent!</p>
+                    <p className="text-[11px] font-black text-white/40 uppercase tracking-widest">Admin will verify your receipt shortly</p>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  {/* Header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/[0.03] rounded-2xl border border-white/[0.08] flex items-center justify-center overflow-hidden shrink-0">
+                        <img src="/assets/whish-logo.png" alt="Whish" className="w-6 h-6 object-contain" />
+                      </div>
+                      <div>
+                        <p className="font-black text-base tracking-tight">Recharge via Whish</p>
+                        <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">Transfer · Instant Credit</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowTopUp(false)}
+                      className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all tap-feedback"
+                    >
+                      <X className="w-4 h-4 text-white/50" />
+                    </button>
+                  </div>
 
-              <Button
-                onClick={handleManualConfirm}
-                disabled={submitting || !topUpAmount || !selectedFile}
-                className="w-full py-7 rounded-2xl bg-white text-black hover:bg-neutral-200 font-black text-md flex items-center justify-center gap-3 transition-all mt-4"
-              >
-                {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                {submitting ? 'NOTIFYING...' : 'CONFIRM TRANSFER'}
-              </Button>
+                  {/* Whish number */}
+                  <div className="bg-emerald-500/[0.06] border border-emerald-500/20 rounded-2xl p-4 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-1">Send to this number</p>
+                      <span className="text-2xl font-black tracking-widest font-mono text-white">{WHISH_NUMBER}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={copyNumber}
+                      className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[10px] font-black border transition-all tap-feedback shrink-0 ${
+                        copied
+                          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                          : 'bg-white/[0.06] border-white/[0.1] text-white/60 hover:text-white hover:bg-white/[0.1]'
+                      }`}
+                    >
+                      {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                      {copied ? 'COPIED' : 'COPY'}
+                    </button>
+                  </div>
 
-              <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer" className="block text-center mt-2">
-                <p className="text-[9px] font-black text-muted-foreground underline hover:text-white transition-opacity">Problems? Message Support</p>
-              </a>
+                  {/* Preset amounts */}
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30 ml-1">Quick Select Amount</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {[10, 20, 50, 100].map((amt) => (
+                        <button
+                          key={amt}
+                          type="button"
+                          onClick={() => setTopUpAmount(String(amt))}
+                          className={`h-12 rounded-2xl font-black text-sm transition-all tap-feedback border ${
+                            topUpAmount === String(amt)
+                              ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-lg shadow-emerald-500/15'
+                              : 'bg-white/[0.04] border-white/[0.08] text-white/50 hover:bg-white/[0.08] hover:text-white'
+                          }`}
+                        >
+                          ${amt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom amount input */}
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30 ml-1">Or enter custom amount ($)</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-white/30 text-lg">$</span>
+                      <Input
+                        type="number"
+                        placeholder="0.00"
+                        value={topUpAmount}
+                        onChange={(e) => setTopUpAmount(e.target.value)}
+                        className="h-14 bg-white/[0.04] border-white/[0.09] rounded-2xl pl-9 pr-5 text-lg font-black input-premium focus-visible:ring-emerald-500/30"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Proof upload */}
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30 ml-1">Upload Proof (Screenshot)</label>
+                    <div className="relative group/file">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      />
+                      <div className={`h-[72px] border border-dashed rounded-2xl flex items-center gap-3 px-5 transition-all group-hover/file:bg-white/[0.06] ${
+                        selectedFile
+                          ? 'border-emerald-500/40 bg-emerald-500/[0.05]'
+                          : 'border-white/[0.1] bg-white/[0.03]'
+                      }`}>
+                        {selectedFile ? (
+                          <>
+                            <FileText className="w-5 h-5 text-emerald-400 shrink-0" />
+                            <span className="text-[11px] font-black text-emerald-400 uppercase truncate">{selectedFile.name}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-5 h-5 text-white/25 shrink-0" />
+                            <span className="text-[11px] font-black text-white/30 uppercase">{t('clickToUpload')}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* CTA */}
+                  <button
+                    type="button"
+                    onClick={handleManualConfirm}
+                    disabled={submitting || !topUpAmount || !selectedFile}
+                    className="btn-recharge w-full h-14 rounded-2xl font-black text-white flex items-center justify-center gap-2.5 text-sm tracking-wider tap-feedback disabled:opacity-40 disabled:pointer-events-none"
+                  >
+                    {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-4 h-4" strokeWidth={2.5} />}
+                    {submitting ? 'SENDING...' : 'CONFIRM TRANSFER'}
+                  </button>
+
+                  <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer" className="block text-center">
+                    <p className="text-[9px] font-black text-white/25 underline hover:text-white/60 transition-colors">Problems? Message Support via WhatsApp</p>
+                  </a>
+                </>
+              )}
             </div>
           </div>
         </div>
