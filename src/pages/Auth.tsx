@@ -9,6 +9,7 @@ import { useLanguage } from '@/i18n/LanguageContext'
 import { getErrorMessage } from '@/lib/errors'
 import { BrandLogo } from '@/components/BrandLogo'
 import { supabase } from '@/lib/supabase'
+import { Chrome } from 'lucide-react'
 
 type AuthDebugState = {
   sessionExists: boolean
@@ -41,7 +42,7 @@ export default function Auth() {
     authError: null,
     usersError: null,
   })
-  const { signIn, signUp, resetPasswordForEmail, user, session } = useAuth()
+  const { signIn, signUp, resetPasswordForEmail, user, session, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
   const { t } = useLanguage()
 
@@ -229,6 +230,32 @@ export default function Auth() {
               {loading ? <Loader className="w-5 h-5 animate-spin" /> : isLogin ? t('signIn') : t('signUp')}
             </Button>
           </form>
+
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/10"></div>
+            </div>
+            <div className="relative flex justify-center text-[8px] uppercase tracking-widest font-bold">
+              <span className="bg-transparent px-4 text-muted-foreground">{t('orContinueWith')}</span>
+            </div>
+          </div>
+
+          {/* Google Sign-In Button */}
+          <Button
+            type="button"
+            variant="outline"
+            className="h-14 w-full bg-white/5 border-white/10 text-white font-black rounded-2xl hover:bg-white/10 active:scale-[0.98] transition-all text-xs uppercase tracking-widest gap-3"
+            onClick={async () => {
+              const { error } = await signInWithGoogle()
+              if (error) {
+                toast.error(getErrorMessage(error, t('somethingWentWrong')))
+              }
+            }}
+          >
+            <Chrome className="w-5 h-5" />
+            {t('signInWithGoogle')}
+          </Button>
 
           {isLogin && (
             <div className="text-center">
