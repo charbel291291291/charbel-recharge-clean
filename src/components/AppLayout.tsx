@@ -1,30 +1,30 @@
-import { ReactNode, useState, useRef, useEffect } from 'react';
+import { ReactNode, useState, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { LayoutDashboard, ShoppingBag, LogOut, Shield, Globe, Home, Rocket, Gamepad2 } from 'lucide-react';
+import { LogOut, Home, Rocket, Gamepad2, ShieldIcon, Menu } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { useNotifications } from '@/hooks/useNotifications';
 import NotificationBell from '@/components/NotificationBell';
 import AdminPinVault from './AdminPinVault';
+import LanguageSelector from './LanguageSelector';
 import { toast } from 'sonner';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { signOut } = useAuth();
   const { data: isAdmin } = useAdminAccess();
   const location = useLocation();
   const navigate = useNavigate();
-  const { t, lang, setLang } = useLanguage();
+  const { t } = useLanguage();
   const { notifications, unreadCount, markAllRead, clearAll } = useNotifications();
   
-  // STEALTH ADMIN ACCESS LOGIC
   const [clickCount, setClickCount] = useState(0);
   const [showVault, setShowVault] = useState(false);
   const lastClickRef = useRef<number>(0);
 
-  const handleLogoClick = (e: React.MouseEvent) => {
-    // Only allow clicking to trigger the vault if we are logged in
+  const handleLogoClick = () => {
     const now = Date.now();
     if (now - lastClickRef.current > 2000) {
       setClickCount(1);
@@ -41,81 +41,133 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   };
 
   const navItems = [
-    { to: '/home', label: 'Hub Center', icon: Home },
-    { to: '/cedar-boost', label: 'Cedar Card', icon: Gamepad2 },
-    { to: '/smm-engine', label: 'SMM Engine', icon: Rocket },
+    { to: '/home', label: t('hubCenter'), icon: Home },
+    { to: '/cedar-boost', label: t('cedarCard'), icon: Gamepad2 },
+    { to: '/smm-engine', label: t('smmEngine'), icon: Rocket },
   ];
 
+  const NavLinks = ({ mobile }: { mobile?: boolean }) => (
+    <>
+      {navItems.map(({ to, label, icon: Icon }) => (
+        <Link
+          key={to}
+          to={to}
+          className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${
+            location.pathname === to
+              ? 'bg-primary/10 text-primary border border-primary/20 shadow-lg shadow-primary/10'
+              : 'text-muted-foreground hover:bg-white/5 hover:text-white'
+          } ${mobile ? 'w-full justify-start' : ''}`}
+        >
+          <Icon className="w-4 h-4 shrink-0" />
+          <span>{label}</span>
+        </Link>
+      ))}
+      {isAdmin && (
+         <Link
+          to="/admin"
+          className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest text-emerald-500 hover:bg-emerald-500/10 transition-all ${mobile ? 'w-full justify-start' : ''}`}
+        >
+          <ShieldIcon className="w-4 h-4" />
+          <span>{t('admin')}</span>
+        </Link>
+      )}
+    </>
+  );
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#050505] selection:bg-primary/30">
       {showVault && (
         <AdminPinVault 
           onSuccess={() => {
             setShowVault(false);
-            if (isAdmin) {
-              navigate('/admin');
-            } else {
-              toast.error("Verified. But you don't have Admin permissions in DB.");
-            }
+            if (isAdmin) navigate('/admin');
+            else toast.error("Admin credentials verified, but DB role missing.");
           }}
           onCancel={() => setShowVault(false)} 
         />
       )}
 
-      <header className="border-b border-border glass sticky top-0 z-50">
-        <div className="container flex items-center justify-between h-14">
-          <div
-            onClick={handleLogoClick}
-            className="group flex items-center gap-2 min-w-0 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg transition-transform duration-300 hover:scale-[1.02] active:scale-[0.99] cursor-pointer"
-          >
-            <BrandLogo size="sm" className="shrink-0 transition-transform duration-300 group-hover:-translate-y-px" />
-            <span className="brand-header-title text-base sm:text-lg truncate hidden sm:inline">
-              Cedar Card
-            </span>
+      {/* HEADER */}
+      <header className="border-b border-white/5 glass sticky top-0 z-50 h-16 sm:h-20">
+        <div className="container h-full flex items-center justify-between px-4 sm:px-8">
+          
+          <div className="flex items-center gap-4 sm:gap-8">
+             {/* LOGO */}
+            <div
+              onClick={handleLogoClick}
+              className="group flex items-center gap-3 shrink-0 cursor-pointer active:scale-95 transition-transform"
+            >
+              <BrandLogo size="sm" className="w-8 h-8 sm:w-10 sm:h-10 transition-transform group-hover:rotate-12" />
+              <div className="hidden lg:flex flex-col">
+                 <span className="font-black italic tracking-tighter text-lg leading-none">CEDAR HUB</span>
+                 <span className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.4em] mt-1 opacity-50">PRO ACCESS SYSTEM</span>
+              </div>
+            </div>
+
+            {/* DESKTOP NAV */}
+            <nav className="hidden md:flex items-center gap-1">
+               <NavLinks />
+            </nav>
           </div>
-          <nav className="flex items-center gap-1">
-            {navItems.map(({ to, label, icon: Icon }) => (
-              <Link
-                key={to}
-                to={to}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  location.pathname === to
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{label}</span>
-              </Link>
-            ))}
-            
+
+          <div className="flex items-center gap-2 sm:gap-4">
             <NotificationBell
               notifications={notifications}
               unreadCount={unreadCount}
               onMarkAllRead={markAllRead}
               onClear={clearAll}
             />
+            
+            <div className="hidden sm:block">
+              <LanguageSelector />
+            </div>
+
             <button
-              onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors"
-              title={lang === 'en' ? 'العربية' : 'English'}
+               onClick={signOut}
+               className="p-3 sm:p-4 rounded-2xl bg-white/5 border border-white/10 text-muted-foreground hover:bg-destructive/10 hover:text-destructive active:scale-90 transition-all ms-2"
             >
-              <Globe className="w-4 h-4" />
-              <span className="hidden sm:inline text-xs font-medium">{lang === 'en' ? 'AR' : 'EN'}</span>
+               <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
-            <button
-              onClick={signOut}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-destructive transition-colors ms-2"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </nav>
+
+            {/* MOBILE MENU */}
+            <div className="md:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <button className="p-3 rounded-2xl bg-primary text-white shadow-xl shadow-primary/20 active:scale-90 transition-all">
+                    <Menu className="w-5 h-5" />
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="right" className="glass border-white/10 w-[280px] p-6 flex flex-col gap-8">
+                   <div className="flex items-center gap-3 mb-4">
+                      <BrandLogo size="sm" />
+                      <span className="font-black italic tracking-tighter text-xl">CEDAR HUB</span>
+                   </div>
+                   <div className="flex flex-col gap-2">
+                       <NavLinks mobile />
+                   </div>
+                   <div className="mt-auto pt-6 border-t border-white/5">
+                       <LanguageSelector />
+                   </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          </div>
         </div>
       </header>
 
-      <main className="flex-1 container py-6">
-        {children}
+      <main className="flex-1 overflow-x-hidden pt-4 pb-12">
+        <div className="container px-4 sm:px-8">
+           {children}
+        </div>
       </main>
+      
+      {/* PWA STATUS INDICATOR */}
+      <div className="fixed bottom-4 right-4 z-40 hidden sm:block opacity-20 hover:opacity-100 transition-opacity">
+         <div className="glass rounded-full px-4 py-1.5 border-emerald-500/20 flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500/80 italic">PWA CORE ACTIVE</span>
+         </div>
+      </div>
     </div>
   );
 }
