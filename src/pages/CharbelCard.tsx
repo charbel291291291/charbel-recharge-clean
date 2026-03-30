@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Loader2, CheckCircle2, AlertCircle, ShoppingCart, ChevronDown, SearchX, Rocket, MessageCircle } from 'lucide-react';
+import {
+  Search, Loader2, CheckCircle2, AlertCircle, ShoppingCart,
+  ChevronDown, SearchX, Zap, MessageCircle, Sparkles, Star,
+} from 'lucide-react';
 import { DashboardSkeletonGrid } from '../components/Skeletons';
 import { useLanguage } from '@/i18n/LanguageContext';
 
+// ─── Debounce hook ─────────────────────────────────────────────────────────────
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
   useEffect(() => {
@@ -13,6 +17,7 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
+// ─── Service Card ─────────────────────────────────────────────────────────────
 const ServiceCard = memo(({ service, onOrderSuccess }: any) => {
   const { t } = useLanguage();
   const [link, setLink] = useState('');
@@ -20,6 +25,7 @@ const ServiceCard = memo(({ service, onOrderSuccess }: any) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [focused, setFocused] = useState<'link' | 'qty' | null>(null);
 
   const finalRate = Number(service.rate);
   const previewCost = (typeof qty === 'number' && qty > 0) ? (finalRate / 1000) * qty : 0;
@@ -28,7 +34,7 @@ const ServiceCard = memo(({ service, onOrderSuccess }: any) => {
     if (!link.trim()) return setError(t('enterTargetId'));
     const numQty = Number(qty);
     if (!numQty || numQty < Number(service.min) || numQty > Number(service.max)) {
-      return setError(`${t('amount')} must be between ${service.min} and ${service.max}`);
+      return setError(`${t('amount')} must be between ${service.min}–${service.max}`);
     }
 
     setLoading(true); setError(null); setSuccess(null);
@@ -36,68 +42,155 @@ const ServiceCard = memo(({ service, onOrderSuccess }: any) => {
 
     try {
       const { data: userData } = await supabase.auth.getUser();
-      if (!userData?.user) {
-        throw new Error("User not authenticated. Please log in first.");
-      }
+      if (!userData?.user) throw new Error('User not authenticated. Please log in first.');
 
       const { data, error: invokeError } = await supabase.functions.invoke('secure-order-placement', {
         body: { service_id: service.service_id, link: link.trim(), quantity: numQty, request_id: requestId },
       });
 
-      if (invokeError) throw new Error(invokeError.message || "Network Error.");
-      if (data?.error || !data?.success) throw new Error(data?.error || "Transaction Failed.");
+      if (invokeError) throw new Error(invokeError.message || 'Network Error.');
+      if (data?.error || !data?.success) throw new Error(data?.error || 'Transaction Failed.');
 
-      setSuccess(`${t('orderSubmitted')} #${data.order_id?.substring(0,6)}`);
+      setSuccess(`${t('orderSubmitted')} #${data.order_id?.substring(0, 6)}`);
       setLink(''); setQty('');
-      onOrderSuccess(); 
+      onOrderSuccess();
       setTimeout(() => setSuccess(null), 6000);
     } catch (err: any) {
-      console.error("Function error:", err);
       setError(err.message || t('somethingWentWrong'));
     } finally {
       setLoading(false);
     }
   };
 
+  const categoryLabel = service.category.replace('🎮 ', '').substring(0, 20);
+  const isReady = link.trim() && qty && Number(qty) >= Number(service.min);
+
   return (
-    <div className="group flex flex-col bg-card border border-border rounded-xl overflow-hidden hover:shadow-2xl hover:shadow-emerald-500/5 hover:-translate-y-1 transition-all duration-300">
-      <div className="p-4 border-b border-border relative overflow-hidden bg-emerald-500/5">
-        <div className="flex justify-between items-start mb-2 gap-2">
-          <span className="inline-flex items-center px-2 py-1 rounded bg-emerald-500/10 text-emerald-600 text-[10px] font-black tracking-widest uppercase border border-emerald-500/20">
-            {service.category.replace('🎮 ', '').substring(0, 18)}
+    <div className="group relative flex flex-col rounded-[1.75rem] border border-white/[0.07] bg-[#0d0d0d] overflow-hidden transition-all duration-500 hover:border-emerald-500/30 hover:shadow-[0_0_40px_-8px_rgba(16,185,129,0.2)] hover:-translate-y-1">
+
+      {/* Glow orb — visible on hover */}
+      <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-emerald-500/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+
+      {/* ── CARD HEADER ── */}
+      <div className="relative p-4 sm:p-5 border-b border-white/[0.06]"
+        style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(13,13,13,0) 60%)' }}
+      >
+        {/* Category pill */}
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/[0.1] border border-emerald-500/25 text-emerald-400 text-[9px] font-black tracking-widest uppercase">
+            <Zap className="w-2.5 h-2.5" />
+            {categoryLabel}
           </span>
-          <div className="text-right">
-            <span className="text-xl font-extrabold text-foreground tracking-tight leading-none">
+
+          {/* Price */}
+          <div className="text-right shrink-0">
+            <p className="text-xl font-black tracking-tighter leading-none" style={{ color: 'rgb(52,211,153)' }}>
               ${finalRate.toFixed(3)}
-            </span>
-            <p className="text-[10px] uppercase font-bold text-muted-foreground">{t('per1000')}</p>
+            </p>
+            <p className="text-[8px] font-black uppercase tracking-widest text-white/25 mt-0.5">{t('per1000')}</p>
           </div>
         </div>
-        <h3 className="font-bold text-sm text-foreground leading-snug line-clamp-2 h-10">{service.name}</h3>
+
+        {/* Service name */}
+        <h3 className="font-black text-[13px] text-white/90 leading-snug line-clamp-2 min-h-[2.4rem] group-hover:text-white transition-colors">
+          {service.name}
+        </h3>
       </div>
-      <div className="p-4 flex-1 flex flex-col gap-3">
-        <div className="flex items-center justify-between text-[11px] font-bold px-3 py-1.5 bg-muted rounded-md text-muted-foreground uppercase tracking-widest">
-          <span>{t('min')}: {service.min}</span>
-          <div className="w-px h-3 bg-border"></div>
-          <span>{t('max')}: {service.max}</span>
+
+      {/* ── FORM ── */}
+      <div className="p-4 sm:p-5 flex-1 flex flex-col gap-3">
+
+        {/* Min/Max pill */}
+        <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-[10px] font-black text-white/30 uppercase tracking-widest">
+          <span>{t('min')}: <span className="text-white/50">{Number(service.min).toLocaleString()}</span></span>
+          <div className="w-px h-3 bg-white/10" />
+          <span>{t('max')}: <span className="text-white/50">{Number(service.max).toLocaleString()}</span></span>
         </div>
-        <div className="space-y-2">
-          <input type="url" placeholder={t('targetUrl')} value={link} onChange={(e) => { setLink(e.target.value); setError(null); }} className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:ring-1 focus:ring-emerald-500 transition-all outline-none" />
-          <input type="number" placeholder={`${t('qtyPlaceholder')} ${service.min}`} value={qty} min={service.min} max={service.max} onChange={(e) => { setQty(e.target.value ? Number(e.target.value) : ''); setError(null); }} className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm font-mono focus:ring-1 focus:ring-emerald-500 transition-all outline-none" />
-          {previewCost > 0 && <p className="text-xs font-bold text-emerald-500 text-right font-black">{t('cost')}: ${previewCost.toFixed(3)}</p>}
+
+        {/* Link input */}
+        <div className={`relative rounded-2xl border transition-all duration-200 overflow-hidden ${
+          focused === 'link'
+            ? 'border-emerald-500/50 shadow-[0_0_0_3px_rgba(16,185,129,0.1)]'
+            : 'border-white/[0.08] hover:border-white/[0.15]'
+        }`}>
+          <input
+            type="url"
+            placeholder={t('targetUrl')}
+            value={link}
+            onFocus={() => setFocused('link')}
+            onBlur={() => setFocused(null)}
+            onChange={(e) => { setLink(e.target.value); setError(null); }}
+            className="w-full px-4 py-3 bg-white/[0.03] text-sm font-bold text-white placeholder:text-white/20 outline-none"
+          />
         </div>
-        {error && <div className="text-[11px] font-bold text-destructive bg-destructive/10 px-2 py-1 rounded flex gap-1"><AlertCircle className="w-3 h-3"/> {error}</div>}
-        {success && <div className="text-[11px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded flex gap-1"><CheckCircle2 className="w-3 h-3"/> {success}</div>}
+
+        {/* Qty input + cost preview */}
+        <div className={`relative rounded-2xl border transition-all duration-200 overflow-hidden ${
+          focused === 'qty'
+            ? 'border-emerald-500/50 shadow-[0_0_0_3px_rgba(16,185,129,0.1)]'
+            : 'border-white/[0.08] hover:border-white/[0.15]'
+        }`}>
+          <input
+            type="number"
+            placeholder={`${t('qtyPlaceholder')} ${service.min}`}
+            value={qty}
+            min={service.min}
+            max={service.max}
+            onFocus={() => setFocused('qty')}
+            onBlur={() => setFocused(null)}
+            onChange={(e) => { setQty(e.target.value ? Number(e.target.value) : ''); setError(null); }}
+            className="w-full px-4 py-3 bg-white/[0.03] text-sm font-black font-mono text-white placeholder:text-white/20 outline-none"
+          />
+          {previewCost > 0 && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none animate-in fade-in duration-200">
+              <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg">
+                ${previewCost.toFixed(3)}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Error / success */}
+        {error && (
+          <div className="flex items-center gap-2 text-[11px] font-black text-red-400 bg-red-500/[0.08] border border-red-500/20 px-3 py-2 rounded-xl animate-in slide-in-from-top-1 duration-200">
+            <AlertCircle className="w-3 h-3 shrink-0" /> {error}
+          </div>
+        )}
+        {success && (
+          <div className="flex items-center gap-2 text-[11px] font-black text-emerald-400 bg-emerald-500/[0.08] border border-emerald-500/20 px-3 py-2 rounded-xl animate-in slide-in-from-top-1 duration-200">
+            <CheckCircle2 className="w-3 h-3 shrink-0" /> {success}
+          </div>
+        )}
       </div>
-      <div className="p-4 pt-0">
-        <button onClick={handleOrder} disabled={loading} className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-600 text-white rounded-md text-sm font-black shadow-md hover:bg-emerald-700 active:scale-95 transition-all disabled:opacity-50">
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><ShoppingCart className="w-4 h-4" /> {t('buyNow')}</>}
+
+      {/* ── CTA BUTTON ── */}
+      <div className="px-4 sm:px-5 pb-4 sm:pb-5">
+        <button
+          type="button"
+          onClick={handleOrder}
+          disabled={loading}
+          className={`w-full h-12 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-200 tap-feedback disabled:opacity-50 disabled:pointer-events-none ${
+            success
+              ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400'
+              : isReady
+              ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:brightness-110'
+              : 'bg-white/[0.05] border border-white/[0.08] text-white/35 hover:bg-white/[0.08] hover:text-white/60'
+          }`}
+        >
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : success ? (
+            <><CheckCircle2 className="w-4 h-4" /> Order Placed!</>
+          ) : (
+            <><ShoppingCart className="w-4 h-4" strokeWidth={2.5} /> {t('buyNow')}</>
+          )}
         </button>
       </div>
     </div>
   );
 });
 
+// ─── Page ─────────────────────────────────────────────────────────────────────
 const ITEMS_PER_PAGE = 30;
 
 export default function CharbelCardPage() {
@@ -110,19 +203,16 @@ export default function CharbelCardPage() {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
   useEffect(() => {
-    const chatAppKeywords = ['YoHo', 'Xena', 'SoulStar']; // YoHo includes YoHo Star
+    const chatAppKeywords = ['YoHo', 'Xena', 'SoulStar'];
     // @ts-ignore
     let query = supabase.from('smm_services').select('*').limit(2000).order('rate', { ascending: true });
-    
-    // Explicitly filter for ONLY these names in query if possible, or filter in JS
     const filterString = chatAppKeywords.map(k => `name.ilike.%${k}%`).join(',');
     query = query.or(filterString);
-
     // @ts-ignore
     query.then(({ data }) => {
-      if (data) { 
-        setServices(data); 
-        setActiveCategory("Cedar Card"); 
+      if (data) {
+        setServices(data);
+        setActiveCategory('Cedar Card');
       }
       setLoading(false);
     });
@@ -133,10 +223,14 @@ export default function CharbelCardPage() {
   const filteredServices = useMemo(() => {
     setVisibleCount(ITEMS_PER_PAGE);
     let filtered = services;
-    if (activeCategory === 'Cedar Card') filtered = [...services].sort((a,b) => Number(a.rate) - Number(b.rate));
+    if (activeCategory === 'Cedar Card') filtered = [...services].sort((a, b) => Number(a.rate) - Number(b.rate));
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
-      filtered = filtered.filter(s => s.name.toLowerCase().includes(q) || String(s.service_id).includes(q) || s.category.toLowerCase().includes(q));
+      filtered = filtered.filter(s =>
+        s.name.toLowerCase().includes(q) ||
+        String(s.service_id).includes(q) ||
+        s.category.toLowerCase().includes(q)
+      );
     }
     return filtered;
   }, [services, activeCategory, debouncedSearch]);
@@ -144,71 +238,184 @@ export default function CharbelCardPage() {
   const currentlyVisible = filteredServices.slice(0, visibleCount);
 
   return (
-    <div className="animate-in fade-in duration-500 pb-20">
-      
-      {/* NEW HEADER FOR HUB */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 bg-card/40 p-6 rounded-[2.5rem] border border-border/50 backdrop-blur-sm shadow-sm">
-        <div className="flex items-center gap-5">
-            <div className="p-4 bg-emerald-500/10 text-emerald-500 rounded-2xl border border-emerald-500/20 shadow-inner group">
-               <MessageCircle className="w-7 h-7" />
+    <div className="animate-in fade-in duration-500 pb-24 sm:pb-20 space-y-6 sm:space-y-8">
+
+      {/* ── HERO HEADER ─────────────────────────────────────────────────────── */}
+      <div className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border border-white/[0.07] p-6 sm:p-8 lg:p-10"
+        style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,5,5,0) 50%, rgba(52,211,153,0.04) 100%)' }}
+      >
+        {/* Glow blobs */}
+        <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-12 -right-12 w-56 h-56 rounded-full bg-emerald-400/6 blur-3xl pointer-events-none" />
+
+        <div className="relative flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+          {/* Icon badge */}
+          <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl sm:rounded-[1.25rem] border border-emerald-500/30 flex items-center justify-center shrink-0 overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(16,185,129,0.05) 100%)' }}
+          >
+            <div className="absolute inset-0 opacity-30"
+              style={{ background: 'radial-gradient(circle at 30% 30%, rgba(52,211,153,0.4) 0%, transparent 70%)' }}
+            />
+            <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-400 relative z-10" strokeWidth={2} />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[8px] font-black tracking-[0.2em] uppercase">
+                <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" /> Live
+              </span>
+              <span className="text-[8px] font-black uppercase tracking-[0.2em] text-white/25">
+                {services.length} services available
+              </span>
             </div>
-            <div>
-              <h1 className="text-3xl font-black tracking-tight text-foreground">{t('cedarCard')}</h1>
-              <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-[8px] mt-1 ml-0.5 opacity-60 flex items-center gap-2">
-                 <Rocket className="w-2 h-2 text-emerald-500" /> {t('premiumRecharge')}
-              </p>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tighter text-white italic leading-none">
+              {t('cedarCard')}
+            </h1>
+            <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.3em] text-white/30 mt-1.5">
+              {t('premiumRecharge')} · YoHo · Xena · SoulStar
+            </p>
+          </div>
+
+          {/* Stats pill — desktop */}
+          <div className="hidden sm:flex flex-col items-end gap-1 shrink-0">
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/[0.04] border border-white/[0.07]">
+              <Star className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-xs font-black text-white/70">Premium Service</span>
             </div>
+            <p className="text-[8px] font-black text-white/20 uppercase tracking-widest">Instant delivery</p>
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
-        
-        {/* SIDE CATEGORIES */}
-        <aside className="w-full lg:w-72 flex-shrink-0">
-          <div className="bg-card border border-border rounded-[2.5rem] p-6 sticky top-24 shadow-sm">
-            <h3 className="font-black text-[9px] uppercase tracking-widest text-muted-foreground mb-6 ml-1 flex items-center gap-2.5 opacity-80">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> {t('categories')}
-            </h3>
-            <div className="space-y-2">
-              {categories.map((cat: any) => (
-                <button 
-                    key={cat} 
-                    onClick={() => { setActiveCategory(cat); setSearchQuery(''); }} 
-                    className={`w-full text-left px-5 py-3.5 rounded-2xl text-[12px] transition-all border ${activeCategory === cat ? 'bg-emerald-500/5 border-emerald-500/30 text-emerald-600 font-black shadow-inner translate-x-1' : 'border-transparent text-muted-foreground hover:bg-muted font-bold'}`}
+      {/* ── SEARCH ──────────────────────────────────────────────────────────── */}
+      <div className="relative group">
+        <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-emerald-400 transition-colors duration-300 pointer-events-none" />
+        <input
+          type="text"
+          placeholder={t('searchChatServices')}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-12 pr-5 py-4 sm:py-[18px] bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.14] focus:border-emerald-500/50 rounded-2xl sm:rounded-[1.5rem] text-sm font-bold text-white placeholder:text-white/25 outline-none transition-all duration-300 focus:shadow-[0_0_0_3px_rgba(16,185,129,0.1)] focus:bg-white/[0.06]"
+        />
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery('')}
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/[0.08] hover:bg-white/[0.15] flex items-center justify-center transition-all tap-feedback"
+          >
+            <span className="text-white/50 text-xs font-black">✕</span>
+          </button>
+        )}
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-5 sm:gap-6 lg:gap-8">
+
+        {/* ── SIDEBAR CATEGORIES ──────────────────────────────────────────── */}
+        <aside className="w-full lg:w-64 xl:w-72 shrink-0">
+          <div className="glass border border-white/[0.07] rounded-[1.75rem] p-5 sticky top-24"
+            style={{ backdropFilter: 'blur(20px)' }}
+          >
+            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25 mb-4 flex items-center gap-2">
+              <Sparkles className="w-3 h-3 text-emerald-500/60" /> {t('categories')}
+            </p>
+            <div className="space-y-1.5">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => { setActiveCategory(cat); setSearchQuery(''); }}
+                  className={`w-full text-left px-4 py-3 rounded-2xl text-[12px] font-black transition-all duration-200 tap-feedback ${
+                    activeCategory === cat
+                      ? 'bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shadow-sm translate-x-1'
+                      : 'border border-transparent text-white/40 hover:bg-white/[0.05] hover:text-white/70'
+                  }`}
                 >
-                  {cat === 'Cedar Card' ? t('cedarCard') : cat}
+                  <div className="flex items-center gap-2.5">
+                    {activeCategory === cat && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                    )}
+                    <span>{cat === 'Cedar Card' ? t('cedarCard') : cat}</span>
+                  </div>
                 </button>
               ))}
+            </div>
+
+            {/* Mini info card */}
+            <div className="mt-5 p-3.5 rounded-2xl bg-emerald-500/[0.06] border border-emerald-500/15 space-y-1.5">
+              <p className="text-[9px] font-black text-emerald-400/80 uppercase tracking-widest flex items-center gap-1.5">
+                <Zap className="w-2.5 h-2.5" /> Instant Orders
+              </p>
+              <p className="text-[10px] font-bold text-white/30 leading-relaxed">
+                All services are processed automatically with no manual steps.
+              </p>
             </div>
           </div>
         </aside>
 
-        {/* PRODUCTS AREA */}
-        <div className="flex-1">
-          <div className="mb-10">
-            <div className="relative group">
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-emerald-500 transition-all duration-300" />
-              <input type="text" placeholder={t('searchChatServices')} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-16 pr-8 py-5 bg-card border border-border rounded-[2rem] text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all shadow-sm group-hover:shadow-lg" />
+        {/* ── PRODUCTS GRID ───────────────────────────────────────────────── */}
+        <div className="flex-1 min-w-0">
+          {/* Result count */}
+          {!loading && (
+            <div className="flex items-center justify-between mb-4 sm:mb-5">
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/25">
+                {debouncedSearch
+                  ? `${filteredServices.length} result${filteredServices.length !== 1 ? 's' : ''} for "${debouncedSearch}"`
+                  : `${filteredServices.length} services`
+                }
+              </p>
+              {visibleCount < filteredServices.length && (
+                <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">
+                  Showing {Math.min(visibleCount, filteredServices.length)} of {filteredServices.length}
+                </p>
+              )}
             </div>
-          </div>
+          )}
 
           {loading ? (
             <DashboardSkeletonGrid />
           ) : currentlyVisible.length === 0 ? (
-            <div className="py-24 text-center">
-                <SearchX className="w-10 h-10 text-muted-foreground/30 mx-auto mb-6" />
-                <p className="font-black text-muted-foreground text-lg">{t('noChatServices')}</p>
+            <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/[0.07] flex items-center justify-center">
+                <SearchX className="w-7 h-7 text-white/20" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-black text-white/40 text-base">{t('noChatServices')}</p>
+                <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">Try a different search term</p>
+              </div>
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="px-5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white/50 text-xs font-black hover:bg-white/[0.09] hover:text-white transition-all tap-feedback"
+                >
+                  Clear Search
+                </button>
+              )}
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {currentlyVisible.map(service => <ServiceCard key={service.service_id} service={service} onOrderSuccess={() => window.dispatchEvent(new CustomEvent('balance-refresh-needed'))} />)}
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+                {currentlyVisible.map(service => (
+                  <ServiceCard
+                    key={service.service_id}
+                    service={service}
+                    onOrderSuccess={() => window.dispatchEvent(new CustomEvent('balance-refresh-needed'))}
+                  />
+                ))}
               </div>
-              
+
               {visibleCount < filteredServices.length && (
-                <div className="mt-16 text-center">
-                  <button onClick={() => setVisibleCount(v => v + ITEMS_PER_PAGE)} className="px-12 py-4 bg-muted/50 text-foreground hover:bg-emerald-600 hover:text-white rounded-[2rem] text-[10px] font-black shadow-xl tracking-widest inline-flex items-center gap-3 transition-all ring-1 ring-border border border-border">
-                    <ChevronDown className="w-4 h-4"/> {t('loadMoreApps')}
+                <div className="mt-10 sm:mt-12 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount(v => v + ITEMS_PER_PAGE)}
+                    className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.09] hover:bg-emerald-500/10 hover:border-emerald-500/25 hover:text-emerald-300 text-white/40 text-[10px] font-black uppercase tracking-widest transition-all duration-300 tap-feedback"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                    {t('loadMoreApps')}
+                    <span className="px-2 py-0.5 rounded-full bg-white/[0.07] text-white/30 text-[9px]">
+                      +{Math.min(ITEMS_PER_PAGE, filteredServices.length - visibleCount)}
+                    </span>
                   </button>
                 </div>
               )}
