@@ -20,6 +20,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const HomePage = lazy(() => import("./pages/HomePage"));
 const SmmServices = lazy(() => import("./pages/SmmServices"));
 const CharbelCard = lazy(() => import("./pages/CharbelCard"));
+const Orders = lazy(() => import("./pages/Orders"));
 
 const queryClient = new QueryClient();
 
@@ -163,6 +164,18 @@ const App = () => (
                     <Suspense fallback={<RouteLoading />}>
                       <RouteErrorBoundary>
                         <Dashboard />
+                      </RouteErrorBoundary>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/orders"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<RouteLoading />}>
+                      <RouteErrorBoundary>
+                        <Orders />
                       </RouteErrorBoundary>
                     </Suspense>
                   </ProtectedRoute>

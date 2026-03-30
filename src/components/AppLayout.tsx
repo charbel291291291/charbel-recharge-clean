@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { LogOut, Home, Rocket, Gamepad2, ShieldIcon, Menu } from 'lucide-react';
+import { LogOut, Home, Rocket, Gamepad2, ShieldIcon, Menu, ShoppingBag, Wallet } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { useNotifications } from '@/hooks/useNotifications';
 import NotificationBell from '@/components/NotificationBell';
@@ -44,6 +44,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     { to: '/home', label: t('hubCenter'), icon: Home },
     { to: '/cedar-boost', label: t('cedarCard'), icon: Gamepad2 },
     { to: '/smm-engine', label: t('smmEngine'), icon: Rocket },
+    { to: '/orders', label: 'Orders', icon: ShoppingBag },
+    { to: '/dashboard', label: 'Wallet', icon: Wallet },
   ];
 
   const NavLinks = ({ mobile }: { mobile?: boolean }) => (

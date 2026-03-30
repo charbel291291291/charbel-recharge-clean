@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
@@ -13,9 +13,37 @@ export type AppNotification = {
   timestamp: Date
 }
 
+// ─── Subtle Web Audio ping (no external assets required) ─────────────────────
+function playNotificationSound() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const oscillator = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    oscillator.connect(gain)
+    gain.connect(ctx.destination)
+
+    oscillator.type = 'sine'
+    oscillator.frequency.setValueAtTime(880, ctx.currentTime)          // A5
+    oscillator.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.15) // A4
+
+    gain.gain.setValueAtTime(0.18, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4)
+
+    oscillator.start(ctx.currentTime)
+    oscillator.stop(ctx.currentTime + 0.4)
+
+    // Clean up context after sound finishes
+    setTimeout(() => ctx.close(), 600)
+  } catch {
+    // Silently ignore — AudioContext may be blocked by browser policy
+  }
+}
+
 export function useNotifications() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const audioUnlockedRef = useRef(false)
 
   const QUERY_KEY = ['notifications', user?.id]
 
@@ -70,7 +98,18 @@ export function useNotifications() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
   })
 
-  // ── Realtime: new notification rows → toast + refresh query ──────────────
+  // ── Unlock AudioContext on first user interaction ─────────────────────────
+  useEffect(() => {
+    const unlock = () => { audioUnlockedRef.current = true }
+    window.addEventListener('click', unlock, { once: true })
+    window.addEventListener('touchstart', unlock, { once: true })
+    return () => {
+      window.removeEventListener('click', unlock)
+      window.removeEventListener('touchstart', unlock)
+    }
+  }, [])
+
+  // ── Realtime: new notification rows → toast + sound + refresh ─────────────
   useEffect(() => {
     if (!user?.id) return
 
@@ -85,9 +124,31 @@ export function useNotifications() {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          // Show toast for the new notification
-          toast.info(payload.new.message as string, { duration: 4000 })
-          // Refresh the query so the bell count updates immediately
+          const msg = payload.new.message as string
+          const type = payload.new.type as string
+
+          // Choose toast variant by notification type
+          if (type === 'topup') {
+            toast.success(msg, {
+              duration: 5000,
+              icon: msg.includes('+') ? '💚' : '💸',
+            })
+          } else if (type === 'order') {
+            const isCompleted = (payload.new.status as string) === 'completed'
+            toast[isCompleted ? 'success' : 'info'](msg, {
+              duration: 5000,
+              icon: isCompleted ? '✅' : '📦',
+            })
+          } else {
+            toast.info(msg, { duration: 4000 })
+          }
+
+          // Play sound if audio is unlocked
+          if (audioUnlockedRef.current) {
+            playNotificationSound()
+          }
+
+          // Refresh query so bell count updates immediately
           void queryClient.invalidateQueries({ queryKey: ['notifications', user.id] })
         }
       )
