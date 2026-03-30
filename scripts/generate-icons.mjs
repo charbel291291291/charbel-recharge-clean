@@ -19,7 +19,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.resolve(__dirname, '..');
-const SVG_SRC   = path.join(ROOT, 'public', 'logo-icon.svg');
+const PNG_SRC   = path.join(ROOT, 'public', 'cedar1.png');
 const OUT_DIR   = path.join(ROOT, 'public', 'icons');
 
 // ── All required PWA + browser icon sizes ────────────────────────────────────
@@ -33,14 +33,14 @@ async function main() {
   // Ensure output directory
   if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
 
-  const svgBuffer = fs.readFileSync(SVG_SRC);
+  const pngBuffer = fs.readFileSync(PNG_SRC);
 
-  console.log('🎨 Generating PNG icons from logo-icon.svg...\n');
+  console.log('🎨 Generating PNG icons from cedar1.png...\n');
 
   // ── Icon sizes ──────────────────────────────────────────────────────────────
   for (const size of ICON_SIZES) {
     const outPath = path.join(OUT_DIR, `icon-${size}.png`);
-    await sharp(svgBuffer)
+    await sharp(pngBuffer)
       .resize(size, size)
       .png({ compressionLevel: 9, quality: 100 })
       .toFile(outPath);
@@ -69,7 +69,7 @@ async function main() {
   const logoLeft  = Math.round((OG_WIDTH  - logoSize) / 2);
   const logoTop   = Math.round((OG_HEIGHT - logoSize) / 2) - 30;
 
-  const logoBuffer = await sharp(svgBuffer)
+  const logoBuffer = await sharp(pngBuffer)
     .resize(logoSize, logoSize)
     .png()
     .toBuffer();

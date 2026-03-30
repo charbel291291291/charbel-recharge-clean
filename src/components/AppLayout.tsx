@@ -11,6 +11,7 @@ import AdminPinVault from './AdminPinVault';
 import LanguageSelector from './LanguageSelector';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { signOut } = useAuth();
@@ -19,6 +20,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { notifications, unreadCount, markAllRead, clearAll } = useNotifications();
+  
+  // Monitor network status globally
+  useNetworkStatus();
   
   const [clickCount, setClickCount] = useState(0);
   const [showVault, setShowVault] = useState(false);
@@ -82,28 +86,28 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
       {/* HEADER */}
       <header className="border-b border-white/5 glass sticky top-0 z-50 h-16 sm:h-20">
-        <div className="container h-full flex items-center justify-between px-4 sm:px-8">
+        <div className="container h-full flex items-center justify-between px-3 sm:px-6 md:px-8">
           
-          <div className="flex items-center gap-4 sm:gap-8">
+          <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
              {/* LOGO & 3D NAME */}
             <div
               onClick={handleLogoClick}
-              className="group flex items-center gap-3 shrink-0 cursor-pointer active:scale-95 transition-transform"
+              className="group flex items-center gap-2 sm:gap-3 shrink-0 cursor-pointer active:scale-95 transition-transform"
             >
-              <BrandLogo size="sm" className="w-8 h-8 sm:w-10 sm:h-10 transition-transform group-hover:rotate-12" />
-              <div className="flex flex-col">
-                 <span className="brand-header-title text-base sm:text-xl leading-none">CEDAR BOOST</span>
-                 <span className="text-[7px] sm:text-[9px] font-black text-white/40 uppercase tracking-[0.4em] mt-1 italic">PREMIUM HUB</span>
+              <BrandLogo size="sm" className="w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 transition-transform group-hover:rotate-12" />
+              <div className="flex flex-col min-w-0">
+                 <span className="brand-header-title text-sm sm:text-lg md:text-xl leading-none truncate">CEDAR BOOST</span>
+                 <span className="text-[6px] sm:text-[8px] md:text-[9px] font-black text-white/40 uppercase tracking-[0.4em] mt-0.5 italic whitespace-nowrap">PREMIUM HUB</span>
               </div>
             </div>
 
             {/* DESKTOP NAV */}
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden lg:flex items-center gap-1">
                <NavLinks />
             </nav>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
             <NotificationBell
               notifications={notifications}
               unreadCount={unreadCount}
@@ -117,28 +121,31 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
             <button
                onClick={signOut}
-               className="p-3 sm:p-4 rounded-2xl bg-white/5 border border-white/10 text-muted-foreground hover:bg-destructive/10 hover:text-destructive active:scale-90 transition-all ms-2"
+               className="p-2.5 sm:p-3 md:p-4 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 text-muted-foreground hover:bg-destructive/10 hover:text-destructive active:scale-95 transition-all ms-1 sm:ms-2"
             >
-               <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+               <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
             </button>
 
             {/* MOBILE MENU */}
-            <div className="md:hidden">
+            <div className="lg:hidden">
               <Sheet>
                 <SheetTrigger asChild>
-                  <button className="p-3 rounded-2xl bg-primary text-white shadow-xl shadow-primary/20 active:scale-90 transition-all">
-                    <Menu className="w-5 h-5" />
+                  <button className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-primary text-white shadow-xl shadow-primary/20 active:scale-95 transition-all">
+                    <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </SheetTrigger>
-                <SheetContent side="right" className="glass border-white/10 w-[280px] p-6 flex flex-col gap-8">
-                   <div className="flex items-center gap-3 mb-4">
-                      <BrandLogo size="sm" />
-                      <span className="brand-header-title text-xl">CEDAR BOOST</span>
+                <SheetContent side="right" className="glass border-white/10 w-[300px] sm:w-[350px] p-4 sm:p-6 flex flex-col gap-6 overflow-y-auto">
+                   <div className="flex items-center gap-3 mb-2 pb-4 border-b border-white/5">
+                      <BrandLogo size="md" className="w-10 h-10 sm:w-12 sm:h-12" />
+                      <div>
+                        <span className="brand-header-title text-lg sm:text-xl block">CEDAR BOOST</span>
+                        <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.4em] italic">PREMIUM HUB</span>
+                      </div>
                    </div>
-                   <div className="flex flex-col gap-2">
+                   <div className="flex flex-col gap-2 flex-1">
                        <NavLinks mobile />
                    </div>
-                   <div className="mt-auto pt-6 border-t border-white/5">
+                   <div className="pt-4 border-t border-white/5">
                        <LanguageSelector />
                    </div>
                 </SheetContent>
@@ -148,17 +155,17 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1 overflow-x-hidden pt-4 pb-12">
-        <div className="container px-4 sm:px-8">
+      <main className="flex-1 overflow-x-hidden pt-4 pb-12 sm:pt-6 sm:pb-16 md:pb-20">
+        <div className="container px-3 sm:px-6 md:px-8 max-w-7xl mx-auto">
            {children}
         </div>
       </main>
       
-      {/* PWA STATUS INDICATOR */}
-      <div className="fixed bottom-4 right-4 z-40 hidden sm:block opacity-20 hover:opacity-100 transition-opacity">
-         <div className="glass rounded-full px-4 py-1.5 border-emerald-500/20 flex items-center gap-2">
+      {/* PWA STATUS INDICATOR - Hidden on mobile */}
+      <div className="fixed bottom-3 right-3 sm:bottom-4 sm:right-4 z-40 hidden sm:block opacity-20 hover:opacity-100 transition-opacity">
+         <div className="glass rounded-full px-3 py-1.5 border-emerald-500/20 flex items-center gap-1.5 sm:gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500/80 italic">PWA CORE ACTIVE</span>
+            <span className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest text-emerald-500/80 italic">PWA CORE ACTIVE</span>
          </div>
       </div>
     </div>

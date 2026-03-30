@@ -21,6 +21,7 @@ const HomePage = lazy(() => import("./pages/HomePage"));
 const SmmServices = lazy(() => import("./pages/SmmServices"));
 const CharbelCard = lazy(() => import("./pages/CharbelCard"));
 const Orders = lazy(() => import("./pages/Orders"));
+const Offline = lazy(() => import("./pages/Offline"));
 
 const queryClient = new QueryClient();
 
@@ -213,6 +214,16 @@ const App = () => (
                   <Suspense fallback={<RouteLoading />}>
                     <RouteErrorBoundary>
                       <NotFound />
+                    </RouteErrorBoundary>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/offline"
+                element={
+                  <Suspense fallback={<RouteLoading />}>
+                    <RouteErrorBoundary>
+                      <Offline />
                     </RouteErrorBoundary>
                   </Suspense>
                 }

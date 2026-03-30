@@ -249,51 +249,51 @@ export default function Admin() {
   return (
     <div className="animate-in fade-in duration-500 pb-20 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-gradient-to-br from-red-500/20 to-purple-500/20 text-red-500 rounded-xl border border-red-500/20">
-            <Shield className="w-7 h-7" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="p-2.5 sm:p-3 bg-gradient-to-br from-red-500/20 to-purple-500/20 text-red-500 rounded-xl border border-red-500/20">
+            <Shield className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <h1 className="text-3xl font-black bg-gradient-to-r from-red-500 to-purple-500 bg-clip-text text-transparent">Pro Admin Engine</h1>
-            <p className="text-muted-foreground text-sm uppercase tracking-widest font-bold mt-1">Total System Control</p>
+            <h1 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-red-500 to-purple-500 bg-clip-text text-transparent">Pro Admin Engine</h1>
+            <p className="text-muted-foreground text-[10px] sm:text-sm uppercase tracking-widest font-bold mt-0.5">Total System Control</p>
           </div>
         </div>
-        <button onClick={fetchAdminData} disabled={loading} className="px-5 py-2.5 bg-card border border-border shadow-sm rounded-xl hover:bg-muted font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50">
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-primary' : ''}`} /> Sync Data
+        <button onClick={fetchAdminData} disabled={loading} className="px-4 py-2.5 sm:px-5 sm:py-2.5 bg-card border border-border shadow-sm rounded-xl hover:bg-muted font-bold text-xs sm:text-sm transition-all flex items-center gap-2 disabled:opacity-50">
+          <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${loading ? 'animate-spin text-primary' : ''}`} /> <span className="hidden xs:inline">Sync Data</span>
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex overflow-x-auto gap-1.5 mb-8 bg-card/60 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-sm no-scrollbar">
+      {/* Tabs - Scrollable on mobile */}
+      <div className="flex overflow-x-auto gap-1.5 mb-6 sm:mb-8 bg-card/60 p-1.5 sm:p-2 rounded-2xl border border-border backdrop-blur-sm shadow-sm no-scrollbar scrollbar-hide">
         {TABS.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 min-w-[120px] py-3 px-3 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all ${
+            className={`flex-shrink-0 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 text-[10px] sm:text-sm font-bold transition-all whitespace-nowrap ${
               activeTab === tab.id
-                ? 'bg-primary text-primary-foreground shadow-lg scale-[1.02] shadow-primary/20 ring-1 ring-primary/50'
+                ? 'bg-primary text-white shadow-lg scale-[1.02] shadow-primary/20 ring-1 ring-primary/50'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}
           >
-            <tab.icon className="w-4 h-4" /> {tab.label}
+            <tab.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {tab.label}
           </button>
         ))}
       </div>
 
       {/* ── OVERVIEW ───────────────────────────────────────────────────────── */}
       {activeTab === 'overview' && (
-        <div className="space-y-6 animate-in slide-in-from-left-4 duration-500">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="space-y-4 sm:space-y-6 animate-in slide-in-from-left-4 duration-500">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <MetricCard label="Total Users"      value={metrics.users}            icon={UsersIcon}   color="text-blue-500"    bg="bg-blue-500/10 border-blue-500/20" />
             <MetricCard label="System Liability" value={fmt(metrics.balance)}     icon={DollarSign}  color="text-amber-500"   bg="bg-amber-500/10 border-amber-500/20" />
             <MetricCard label="Pending Deposits" value={metrics.pendingDeposits}  icon={Clock}       color="text-purple-500"  bg="bg-purple-500/10 border-purple-500/20" />
             <MetricCard label="System Health"    value="Operational"              icon={Activity}    color="text-emerald-500" bg="bg-emerald-500/10 border-emerald-500/20" />
           </div>
-          <div className="bg-card border border-border rounded-3xl p-8 text-center">
-            <Activity className="w-12 h-12 text-primary/20 mx-auto mb-4" />
-            <h3 className="text-xl font-bold mb-2">System is running normally</h3>
-            <p className="text-muted-foreground max-w-sm mx-auto text-sm">All databases, proxy edges, and CRON logic are properly routed. SMM APIs are live.</p>
+          <div className="bg-card border border-border rounded-[2rem] p-6 sm:p-8 text-center">
+            <Activity className="w-10 h-10 sm:w-12 sm:h-12 text-primary/20 mx-auto mb-3 sm:mb-4" />
+            <h3 className="text-lg sm:text-xl font-bold mb-2">System is running normally</h3>
+            <p className="text-muted-foreground max-w-sm mx-auto text-xs sm:text-sm px-4">All databases, proxy edges, and CRON logic are properly routed. SMM APIs are live.</p>
           </div>
         </div>
       )}
@@ -512,8 +512,8 @@ export default function Admin() {
               </h2>
               {bulkLoading && <RefreshCw className="w-4 h-4 animate-spin text-primary" />}
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
+            <div className="table-responsive">
+              <table className="w-full text-sm text-left min-w-[800px]">
                 <thead className="text-[10px] uppercase bg-muted/40 text-muted-foreground font-black tracking-widest">
                   <tr>
                     <th className="px-4 py-4">
@@ -542,16 +542,16 @@ export default function Admin() {
                           }
                         </button>
                       </td>
-                      <td className="px-4 py-4 font-mono text-xs opacity-60">#{o.id.substring(0, 8)}</td>
+                      <td className="px-4 py-4 font-mono text-xs opacity-60 whitespace-nowrap">#{o.id.substring(0, 8)}</td>
                       <td className="px-4 py-4 text-xs font-bold">{users.find(u => u.id === o.user_id)?.email || o.user_id?.substring(0, 8)}</td>
                       <td className="px-4 py-4 text-xs">
-                        <div className="font-black">#{o.service_id}</div>
+                        <div className="font-black whitespace-nowrap">#{o.service_id}</div>
                         <div className="text-muted-foreground">qty: <span className="font-mono text-primary">{o.quantity || '—'}</span></div>
                       </td>
-                      <td className="px-4 py-4 font-black text-destructive text-sm">{o.cost ? `$${Number(o.cost).toFixed(3)}` : '—'}</td>
+                      <td className="px-4 py-4 font-black text-destructive text-sm whitespace-nowrap">{o.cost ? `$${Number(o.cost).toFixed(3)}` : '—'}</td>
                       <td className="px-4 py-4 text-right">
                         <span
-                          className="inline-flex px-3 py-1.5 rounded-lg text-[10px] uppercase font-black tracking-wider border"
+                          className="inline-flex px-3 py-1.5 rounded-lg text-[10px] uppercase font-black tracking-wider border whitespace-nowrap"
                           style={{
                             backgroundColor: (STATUS_COLORS[o.status] || '#888') + '18',
                             color:            STATUS_COLORS[o.status] || '#888',
@@ -589,39 +589,39 @@ export default function Admin() {
               />
             </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
+          <div className="table-responsive">
+            <table className="w-full text-sm text-left min-w-[800px]">
               <thead className="text-[10px] uppercase bg-muted/40 text-muted-foreground font-black tracking-widest">
                 <tr>
-                  <th className="px-8 py-5">User</th>
-                  <th className="px-8 py-5">Role</th>
-                  <th className="px-8 py-5">Referral Code</th>
-                  <th className="px-8 py-5">Balance</th>
-                  <th className="px-8 py-5 text-right">Actions</th>
+                  <th className="px-4 py-5">User</th>
+                  <th className="px-4 py-5">Role</th>
+                  <th className="px-4 py-5">Referral Code</th>
+                  <th className="px-4 py-5">Balance</th>
+                  <th className="px-4 py-5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50">
                 {filteredUsers.map((u: any) => (
                   <tr key={u.id} className="hover:bg-muted/30 transition-colors group">
-                    <td className="px-8 py-5">
+                    <td className="px-4 py-5">
                       <p className="font-bold">{u.email || 'No email'}</p>
                       <p className="font-mono text-[10px] text-muted-foreground opacity-50 mt-1">ID: {u.id}</p>
                     </td>
-                    <td className="px-8 py-5">
+                    <td className="px-4 py-5 whitespace-nowrap">
                       <span className={`px-3 py-1.5 rounded-lg text-[10px] uppercase font-bold tracking-wider ${
                         u.role === 'admin' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
                       }`}>{u.role || 'user'}</span>
                     </td>
-                    <td className="px-8 py-5">
+                    <td className="px-4 py-5 whitespace-nowrap">
                       <span className="font-mono text-[11px] text-amber-400 font-black">{u.referral_code || '—'}</span>
                     </td>
-                    <td className="px-8 py-5">
+                    <td className="px-4 py-5 whitespace-nowrap">
                       <span className="font-black text-emerald-500 text-lg">${Number(u.balance || 0).toFixed(2)}</span>
                     </td>
-                    <td className="px-8 py-5 text-right">
+                    <td className="px-4 py-5 text-right">
                       <button
                         onClick={() => updateBalance(u.id, Number(u.balance || 0))}
-                        className="px-4 py-2 bg-background border border-border hover:border-primary hover:text-primary rounded-xl transition-all flex items-center gap-2 ml-auto text-xs font-bold shadow-sm"
+                        className="px-4 py-2 bg-background border border-border hover:border-primary hover:text-primary rounded-xl transition-all flex items-center gap-2 ml-auto text-xs font-bold shadow-sm whitespace-nowrap"
                       >
                         <Edit className="w-3.5 h-3.5" /> Adjust
                       </button>
@@ -653,46 +653,46 @@ export default function Admin() {
               <h2 className="font-bold text-xl flex items-center gap-3"><Clock className="w-6 h-6 text-primary" /> Deposits Ledger</h2>
               <p className="text-muted-foreground text-sm mt-1">Approve or reject deposit requests</p>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
+            <div className="table-responsive">
+              <table className="w-full text-sm text-left min-w-[900px]">
                 <thead className="text-[10px] uppercase bg-muted/40 text-muted-foreground font-black tracking-widest">
                   <tr>
-                    <th className="px-8 py-5">User</th>
-                    <th className="px-8 py-5">Amount</th>
-                    <th className="px-8 py-5">Proof</th>
-                    <th className="px-8 py-5">Status</th>
-                    <th className="px-8 py-5 text-right">Actions</th>
+                    <th className="px-4 py-5">User</th>
+                    <th className="px-4 py-5">Amount</th>
+                    <th className="px-4 py-5">Proof</th>
+                    <th className="px-4 py-5">Status</th>
+                    <th className="px-4 py-5 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
                   {deposits.map((dep: any) => (
                     <tr key={dep.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-8 py-5">
+                      <td className="px-4 py-5">
                         <span className="font-bold block mb-1">{users.find(u => u.id === dep.user_id)?.email || 'N/A'}</span>
                         <span className="font-mono text-[10px] text-muted-foreground opacity-50">{dep.user_id?.substring(0, 8)}</span>
                       </td>
-                      <td className="px-8 py-5 font-black text-emerald-500 text-lg">+${Number(dep.amount).toFixed(2)}</td>
-                      <td className="px-8 py-5 text-xs">
-                        <div className="font-black uppercase tracking-wider mb-1">{dep.method}</div>
+                      <td className="px-4 py-5 font-black text-emerald-500 text-lg whitespace-nowrap">+${Number(dep.amount).toFixed(2)}</td>
+                      <td className="px-4 py-5 text-xs">
+                        <div className="font-black uppercase tracking-wider mb-1 whitespace-nowrap">{dep.method}</div>
                         <a href={dep.proof} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-400 font-bold underline text-[11px] truncate block max-w-[120px]">
                           View Proof
                         </a>
                       </td>
-                      <td className="px-8 py-5">
+                      <td className="px-4 py-5 whitespace-nowrap">
                         <span className={`px-3 py-1.5 rounded-lg text-[10px] uppercase font-black tracking-wider border ${
                           dep.status === 'pending'  ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
                           dep.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
                           'bg-red-500/10 text-red-500 border-red-500/20'
                         }`}>{dep.status}</span>
                       </td>
-                      <td className="px-8 py-5 text-right">
+                      <td className="px-4 py-5 text-right">
                         {dep.status === 'pending' ? (
-                          <div className="flex items-center justify-end gap-2">
-                            <button onClick={() => handleDeposit(dep.id, 'approve')} className="px-4 py-2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white rounded-xl transition-all font-bold text-xs flex items-center gap-2">
-                              <CheckCircle2 className="w-4 h-4" /> Approve
+                          <div className="flex items-center justify-end gap-2 flex-wrap">
+                            <button onClick={() => handleDeposit(dep.id, 'approve')} className="px-3 py-2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white rounded-xl transition-all font-bold text-xs flex items-center gap-1.5 whitespace-nowrap">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Approve
                             </button>
-                            <button onClick={() => handleDeposit(dep.id, 'reject')} className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white rounded-xl transition-all font-bold text-xs flex items-center gap-2">
-                              <XCircle className="w-4 h-4" /> Deny
+                            <button onClick={() => handleDeposit(dep.id, 'reject')} className="px-3 py-2 bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white rounded-xl transition-all font-bold text-xs flex items-center gap-1.5 whitespace-nowrap">
+                              <XCircle className="w-3.5 h-3.5" /> Deny
                             </button>
                           </div>
                         ) : (

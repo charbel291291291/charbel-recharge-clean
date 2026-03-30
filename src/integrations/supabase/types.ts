@@ -359,6 +359,31 @@ export type Database = {
         }
         Returns: Json
       }
+      get_admin_analytics: {
+        Args: {
+          p_days: number
+        }
+        Returns: Json
+      }
+      bulk_update_order_status: {
+        Args: {
+          p_order_ids: string[]
+          p_status: string
+        }
+        Returns: number
+      }
+      bulk_refund_orders: {
+        Args: {
+          p_order_ids: string[]
+        }
+        Returns: number
+      }
+      approve_deposit_request: {
+        Args: {
+          p_request_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
