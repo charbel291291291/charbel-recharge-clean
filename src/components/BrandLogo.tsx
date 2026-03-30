@@ -23,7 +23,7 @@ export function BrandLogo({
   return (
     <img
       src={LOGO_PATH}
-      alt="CedarBoost"
+      alt="Cedar Card"
       className={cn(sizes[size], size !== 'splash' && 'object-contain', 'select-none', className)}
       decoding="async"
       draggable={false}

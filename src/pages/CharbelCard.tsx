@@ -107,10 +107,11 @@ export default function CharbelCardPage() {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
   useEffect(() => {
-    const chatAppKeywords = ['Xena', 'YoHo', 'SoulStar', 'WhatsApp', 'Telegram', 'Messenger', 'IMOU', 'Azar'];
+    const chatAppKeywords = ['YoHo', 'Xena', 'SoulStar']; // YoHo includes YoHo Star
     // @ts-ignore
     let query = supabase.from('smm_services').select('*').limit(2000).order('rate', { ascending: true });
     
+    // Explicitly filter for ONLY these names in query if possible, or filter in JS
     const filterString = chatAppKeywords.map(k => `name.ilike.%${k}%`).join(',');
     query = query.or(filterString);
 
@@ -118,18 +119,18 @@ export default function CharbelCardPage() {
     query.then(({ data }) => {
       if (data) { 
         setServices(data); 
-        setActiveCategory("Chat Apps"); 
+        setActiveCategory("Cedar Card"); 
       }
       setLoading(false);
     });
   }, []);
 
-  const categories = useMemo(() => ['Chat Apps'], []);
+  const categories = useMemo(() => ['Cedar Card'], []);
 
   const filteredServices = useMemo(() => {
     setVisibleCount(ITEMS_PER_PAGE);
     let filtered = services;
-    if (activeCategory === 'Chat Apps') filtered = [...services].sort((a,b) => Number(a.rate) - Number(b.rate));
+    if (activeCategory === 'Cedar Card') filtered = [...services].sort((a,b) => Number(a.rate) - Number(b.rate));
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
       filtered = filtered.filter(s => s.name.toLowerCase().includes(q) || String(s.service_id).includes(q) || s.category.toLowerCase().includes(q));
@@ -149,7 +150,7 @@ export default function CharbelCardPage() {
                <MessageCircle className="w-7 h-7" />
             </div>
             <div>
-              <h1 className="text-3xl font-black tracking-tight text-foreground">CedarBoost Hub</h1>
+              <h1 className="text-3xl font-black tracking-tight text-foreground">Cedar Card</h1>
               <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-[8px] mt-1 ml-0.5 opacity-60 flex items-center gap-2">
                  <Rocket className="w-2 h-2 text-emerald-500" /> Premium Digital Recharge
               </p>

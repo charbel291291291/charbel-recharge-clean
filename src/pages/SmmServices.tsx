@@ -108,14 +108,14 @@ export default function SmmServicesPage() {
 
   useEffect(() => {
     // RESTORE ALL: Fetch all services BUT filter out Chat Apps
-    const chatAppKeywords = ['Xena', 'YoHo', 'SoulStar', 'WhatsApp', 'Telegram', 'Messenger', 'IMOU', 'Azar'];
+    const chatAppKeywords = ['YoHo', 'Xena', 'SoulStar']; // YoHo includes YoHo Star
     // @ts-ignore
     let query = supabase.from('smm_services').select('*').limit(2000).order('rate', { ascending: true });
     
     // @ts-ignore
     query.then(({ data }: { data: any[] | null }) => {
       if (data) {
-        // Filter out chat apps locally to leave "the others"
+        // Filter out ONLY the Cedar Card apps to leave "the others"
         const others = data.filter(s => 
           !chatAppKeywords.some(k => s.name.toLowerCase().includes(k.toLowerCase()))
         );

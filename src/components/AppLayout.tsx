@@ -17,7 +17,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   const navItems = [
     { to: '/home', label: 'Hub Center', icon: Home },
-    { to: '/cedar-boost', label: 'CedarBoost', icon: Gamepad2 },
+    { to: '/cedar-boost', label: 'Cedar Card', icon: Gamepad2 },
     { to: '/smm-engine', label: 'SMM Engine', icon: Rocket },
   ];
 
@@ -31,7 +31,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           >
             <BrandLogo size="sm" className="shrink-0 transition-transform duration-300 group-hover:-translate-y-px" />
             <span className="brand-header-title text-base sm:text-lg truncate hidden sm:inline">
-              CedarBoost
+              Cedar Card
             </span>
           </Link>
           <nav className="flex items-center gap-1">

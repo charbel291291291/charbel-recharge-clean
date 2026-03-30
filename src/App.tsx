@@ -60,7 +60,7 @@ function RouteLoading() {
             <div className="flex flex-col items-center gap-2">
                 <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                    <Zap className="w-3 h-3 animate-bounce" /> 
-                   <span>CedarBoost Hub</span>
+                   <span>Cedar Card</span>
                 </div>
                 <div className="h-4 flex items-center justify-center">
                    <p className="text-muted-foreground text-[11px] font-bold animate-pulse">{messages[msgIndex]}</p>
