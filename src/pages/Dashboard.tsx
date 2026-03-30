@@ -200,8 +200,8 @@ export default function Dashboard() {
         <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[100] flex items-center justify-center p-6 animate-in fade-in zoom-in duration-300" onClick={() => setShowTopUp(false)}>
           <div className="bg-[#0a0a0a] border border-white/10 rounded-[3rem] max-w-md w-full p-10 space-y-8 shadow-[0_0_100px_rgba(16,185,129,0.1)]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-2xl border border-emerald-500/20">
-                <Phone className="w-6 h-6" />
+              <div className="p-3 bg-white/[0.03] rounded-2xl border border-white/10 shadow-inner group overflow-hidden">
+                <img src="/assets/whish-logo.png" alt="Whish Money" className="w-8 h-8 object-contain group-hover:scale-110 transition-transform duration-500" />
               </div>
               <button onClick={() => setShowTopUp(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
                 <X className="w-6 h-6 text-muted-foreground" />
