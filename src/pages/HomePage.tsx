@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, ShieldCheck, Zap, Wallet, Gamepad2, Rocket } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Zap, Wallet, Gamepad2, Rocket, Lock, Headphones } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
+import SocialProof from '@/components/SocialProof';
+import TrustLayer from '@/components/TrustLayer';
 
 export default function HomePage() {
   const { t } = useLanguage();
@@ -40,6 +42,7 @@ export default function HomePage() {
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 pt-10 pb-20 max-w-7xl mx-auto px-4">
+      <SocialProof />
       
       {/* HERO SECTION */}
       <div className="text-center max-w-4xl mx-auto mb-16 relative">
@@ -70,9 +73,9 @@ export default function HomePage() {
              <div className="relative h-64 overflow-hidden">
                 <div className={`absolute inset-0 bg-gradient-to-t ${card.color} mix-blend-overlay z-10`} />
                 <img 
-                  src={card.image} 
-                  alt={card.title} 
-                  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-1000 ease-out grayscale-[0.2] group-hover:grayscale-0"
+                   src={card.image} 
+                   alt={card.title} 
+                   className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-1000 ease-out grayscale-[0.2] group-hover:grayscale-0"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent z-20" />
                 
@@ -103,17 +106,26 @@ export default function HomePage() {
         
       </div>
       
-      {/* TRUST BADGE */}
-      <div className="mt-20 flex flex-col items-center gap-6 animate-fade-in delay-700">
-        <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.4em] bg-card/60 backdrop-blur-xl py-4 px-10 rounded-full border border-white/5 shadow-2xl shadow-black/40">
-          <ShieldCheck className="w-5 h-5 text-emerald-500" />
-          <span className="opacity-50">{t('protectedSystem')}</span>
+      {/* TRUST LAYER COMPONENT */}
+      <div className="mt-20">
+         <TrustLayer />
+      </div>
+
+      {/* LEGAL FOOTER LINKS */}
+      <div className="mt-24 border-t border-white/5 pt-12 flex flex-col items-center gap-8">
+        <div className="flex flex-wrap justify-center gap-8">
+           <Link to="/terms" className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-white transition-colors">{t('termsConditions')}</Link>
+           <Link to="/privacy" className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-white transition-colors">{t('privacyPolicy')}</Link>
+           <div className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">{t('trustedByUsers')}</div>
         </div>
+        
         <div className="flex gap-8 opacity-20 hover:opacity-100 transition-opacity grayscale hover:grayscale-0 duration-500">
              <div className="font-black text-xl italic tracking-tighter">BITCOIN</div>
              <div className="font-black text-xl italic tracking-tighter">USDT</div>
-             <div className="font-black text-xl italic tracking-tighter">WHISH</div>
+             <div className="font-black text-xl italic tracking-tighter">WHISH MONEY</div>
         </div>
+        
+        <p className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.5em]">© 2026 CEDAR CARD ENGINE . ALL RIGHTS RESERVED</p>
       </div>
     </div>
   );

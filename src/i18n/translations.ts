@@ -284,6 +284,18 @@ export const translations = {
     targetUrl: "Target URL/Account...",
     qtyPlaceholder: "Qty: e.g.",
     noServicesFound: "No services found.",
+
+    // UX & Trust Upgrades
+    privacyPolicy: "Privacy Policy",
+    termsConditions: "Terms & Conditions",
+    securePayment: "Secure Payment",
+    instantDelivery: "Instant Delivery",
+    trustedByUsers: "Trusted by over 10,000+ active users.",
+    activeUsersNow: "users active on the platform now",
+    justPurchased: "Just purchased a package!",
+    recentActivity: "Recent Activity",
+    fastSupport: "24/7 Support",
+    guaranteedService: "100% Satisfaction Guaranteed",
   },
   ar: {
     // Nav
@@ -568,6 +580,18 @@ export const translations = {
     targetUrl: "الرابط / الحساب...",
     qtyPlaceholder: "الكمية: مثلا",
     noServicesFound: "لم يتم العثور على خدمات.",
+
+    // UX & Trust Upgrades
+    privacyPolicy: "سياسة الخصوصية",
+    termsConditions: "الشروط والأحكام",
+    securePayment: "دفع آمن",
+    instantDelivery: "تسليم فوري",
+    trustedByUsers: "موثوق من قبل أكثر من 10,000+ مستخدم نشط.",
+    activeUsersNow: "مستخدم نشط على المنصة الآن",
+    justPurchased: "قام بشراء باقة الآن!",
+    recentActivity: "النشاط الأخير",
+    fastSupport: "دعم 24/7",
+    guaranteedService: "خدمة مضمونة 100%",
   },
 } as const;
 
