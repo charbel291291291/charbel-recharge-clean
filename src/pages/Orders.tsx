@@ -238,22 +238,22 @@ export default function Orders() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-20">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-primary/10 border border-primary/20 rounded-2xl">
-            <ShoppingBag className="w-6 h-6 text-primary" />
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="p-2.5 sm:p-3 bg-primary/10 border border-primary/20 rounded-xl sm:rounded-2xl shrink-0">
+            <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-black tracking-tighter">My Orders</h1>
-            <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-60">
-              {orders.length} total orders
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tighter">My Orders</h1>
+            <p className="text-muted-foreground text-[9px] sm:text-[10px] font-black uppercase tracking-widest opacity-60">
+              {orders.length} total
             </p>
           </div>
         </div>
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10"
+          className="rounded-xl sm:rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 shrink-0 touch-target"
           onClick={() => queryClient.invalidateQueries({ queryKey: ['orders-full', user?.id] })}
         >
           <RefreshCw className="w-4 h-4" />
@@ -294,7 +294,7 @@ export default function Orders() {
           {Array.from({ length: 4 }).map((_, i) => <OrderSkeleton key={i} />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="glass border border-white/5 rounded-[2.5rem] p-24 text-center">
+        <div className="glass border border-white/5 rounded-[2rem] sm:rounded-[2.5rem] py-16 px-8 sm:p-24 text-center">
           <AlertCircle className="w-10 h-10 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-muted-foreground text-xs font-black uppercase tracking-[0.3em] opacity-30 italic">
             No orders found

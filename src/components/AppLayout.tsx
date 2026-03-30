@@ -126,28 +126,32 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
             </button>
 
-            {/* MOBILE MENU */}
+            {/* MOBILE SETTINGS SHEET — language + sign out */}
             <div className="lg:hidden">
               <Sheet>
                 <SheetTrigger asChild>
-                  <button className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-primary text-white shadow-xl shadow-primary/20 active:scale-95 transition-all">
-                    <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <button className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white/60 active:scale-95 transition-all">
+                    <Menu className="w-4 h-4" />
                   </button>
                 </SheetTrigger>
-                <SheetContent side="right" className="glass border-white/10 w-[300px] sm:w-[350px] p-4 sm:p-6 flex flex-col gap-6 overflow-y-auto">
-                   <div className="flex items-center gap-3 mb-2 pb-4 border-b border-white/5">
-                      <BrandLogo size="md" className="w-10 h-10 sm:w-12 sm:h-12" />
+                <SheetContent side="right" className="glass border-white/10 w-[260px] p-5 flex flex-col gap-5 overflow-y-auto">
+                   <div className="flex items-center gap-3 pb-4 border-b border-white/5">
+                      <BrandLogo size="sm" className="w-9 h-9" />
                       <div>
-                        <span className="brand-header-title text-lg sm:text-xl block">CEDAR BOOST</span>
-                        <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.4em] italic">PREMIUM HUB</span>
+                        <span className="brand-header-title text-base block">CEDAR BOOST</span>
+                        <span className="text-[7px] font-black text-white/40 uppercase tracking-[0.4em] italic">PREMIUM HUB</span>
                       </div>
                    </div>
                    <div className="flex flex-col gap-2 flex-1">
-                       <NavLinks mobile />
+                      <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25 mb-1">Language</p>
+                      <LanguageSelector />
                    </div>
-                   <div className="pt-4 border-t border-white/5">
-                       <LanguageSelector />
-                   </div>
+                   <button
+                     onClick={signOut}
+                     className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive font-black text-xs uppercase tracking-widest transition-all hover:bg-destructive/20 active:scale-95"
+                   >
+                     <LogOut className="w-4 h-4" /> Sign Out
+                   </button>
                 </SheetContent>
               </Sheet>
             </div>
@@ -155,14 +159,39 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1 overflow-x-hidden pt-4 pb-12 sm:pt-6 sm:pb-16 md:pb-20">
+      <main className="flex-1 overflow-x-hidden pt-4 pb-28 lg:pb-20 sm:pt-6">
         <div className="container px-3 sm:px-6 md:px-8 max-w-7xl mx-auto">
            {children}
         </div>
       </main>
-      
-      {/* PWA STATUS INDICATOR - Hidden on mobile */}
-      <div className="fixed bottom-3 right-3 sm:bottom-4 sm:right-4 z-40 hidden sm:block opacity-20 hover:opacity-100 transition-opacity">
+
+      {/* MOBILE BOTTOM NAV — thumb zone, hidden on desktop */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#050505]/95 backdrop-blur-2xl border-t border-white/[0.06]">
+        <div className="flex items-stretch justify-around px-1 pt-1 pb-2">
+          {navItems.map(({ to, label, icon: Icon }) => {
+            const active = location.pathname === to
+            return (
+              <Link
+                key={to}
+                to={to}
+                className={`flex flex-col items-center justify-center gap-0.5 py-2 flex-1 min-w-0 transition-all active:scale-95 ${
+                  active ? 'text-primary' : 'text-white/30'
+                }`}
+              >
+                <div className={`relative p-1.5 rounded-xl transition-all ${active ? 'bg-primary/15' : ''}`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className={`text-[8px] font-black uppercase tracking-wide truncate max-w-[52px] px-0.5 ${active ? 'text-primary' : 'text-white/25'}`}>
+                  {label}
+                </span>
+              </Link>
+            )
+          })}
+        </div>
+      </nav>
+
+      {/* PWA STATUS INDICATOR — Desktop only */}
+      <div className="fixed bottom-3 right-3 sm:bottom-4 sm:right-4 z-40 hidden lg:block opacity-20 hover:opacity-100 transition-opacity">
          <div className="glass rounded-full px-3 py-1.5 border-emerald-500/20 flex items-center gap-1.5 sm:gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             <span className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest text-emerald-500/80 italic">PWA CORE ACTIVE</span>

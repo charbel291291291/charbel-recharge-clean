@@ -172,25 +172,25 @@ export default function Auth() {
   ]
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-background relative overflow-hidden">
       {/* DECORATIVE BACKGROUND */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 -left-20 w-72 h-72 rounded-full bg-primary/10 blur-3xl animate-pulse" />
         <div className="absolute bottom-1/4 -right-20 w-80 h-80 rounded-full bg-primary/5 blur-3xl animate-pulse delay-700" />
       </div>
 
-      <div className="relative w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-        <div className="text-center space-y-4">
+      <div className="relative w-full max-w-md space-y-5 sm:space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <div className="text-center space-y-3 sm:space-y-4">
           <div className="flex justify-center cursor-help transition-transform active:scale-95" onClick={handleLogoClick}>
             <BrandLogo size="lg" className="mx-auto drop-shadow-2xl" />
           </div>
-          <h1 className="brand-header-title text-4xl sm:text-5xl italic tracking-tighter">
+          <h1 className="brand-header-title text-3xl sm:text-4xl md:text-5xl italic tracking-tighter">
             CEDAR BOOST
           </h1>
           <p className="text-muted-foreground text-[10px] uppercase tracking-[0.4em] font-black opacity-60 italic">{t('brandTagline')}</p>
         </div>
 
-        <div className="glass rounded-[2.5rem] border border-white/5 p-8 shadow-2xl space-y-8">
+        <div className="glass rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 p-5 sm:p-8 shadow-2xl space-y-6 sm:space-y-8">
           <div className="space-y-2 text-center">
             <h2 className="text-2xl font-black italic tracking-tighter">{isLogin ? t('welcomeBack') : t('createAccount')}</h2>
             <p className="text-muted-foreground text-[10px] uppercase tracking-widest font-bold opacity-60">{isLogin ? t('signInToAccount') : t('getStarted')}</p>

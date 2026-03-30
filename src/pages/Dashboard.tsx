@@ -257,66 +257,65 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20">
+    <div className="space-y-5 sm:space-y-6 animate-fade-in pb-24 sm:pb-20">
       {/* Animated balance delta overlay */}
       {balanceDelta !== null && (
         <BalanceDelta delta={balanceDelta} onDone={() => setBalanceDelta(null)} />
       )}
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-black tracking-tighter">My Hub Center</h1>
-          <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-60">
-            User ID: {user?.id?.substring(0, 8)}...
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tighter">My Hub Center</h1>
+          <p className="text-muted-foreground text-[9px] sm:text-[10px] font-black uppercase tracking-widest opacity-60">
+            ID: {user?.id?.substring(0, 8)}…
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Link to="/home">
-            <Button variant="outline" size="sm" className="rounded-full px-5 border-white/5 bg-white/5 hover:bg-white/10 font-black text-[10px]">
-              <ArrowLeft className="w-3.5 h-3.5 mr-2" /> EXIT TO HOME
-            </Button>
-          </Link>
-        </div>
+        <Link to="/home">
+          <Button variant="outline" size="sm" className="rounded-full px-4 border-white/5 bg-white/5 hover:bg-white/10 font-black text-[10px] shrink-0">
+            <ArrowLeft className="w-3 h-3 mr-1.5" /> HOME
+          </Button>
+        </Link>
       </div>
 
       {/* Top cards */}
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {/* BALANCE CARD */}
-        <div className="relative overflow-hidden glass rounded-[2.5rem] p-8 glow shadow-2xl border-white/5 group">
-          <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:scale-110 transition-transform duration-700">
-            <Wallet className="w-32 h-32" />
+        <div className="relative overflow-hidden glass rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 glow shadow-2xl border-white/5 group sm:col-span-2 lg:col-span-1">
+          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform duration-700">
+            <Wallet className="w-24 h-24 sm:w-32 sm:h-32" />
           </div>
-          <div className="flex items-center gap-3 text-muted-foreground text-[10px] font-black uppercase tracking-widest mb-4">
+          <div className="flex items-center gap-2 text-muted-foreground text-[10px] font-black uppercase tracking-widest mb-3 sm:mb-4">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             Live Balance
           </div>
           {userLoading ? (
-            <Skeleton className="h-12 w-48 rounded-2xl" />
+            <Skeleton className="h-10 sm:h-12 w-40 sm:w-48 rounded-2xl" />
           ) : (
-            <p className="text-5xl font-black tracking-tighter mb-8 transition-all duration-500">
+            <p className="text-4xl sm:text-5xl font-black tracking-tighter mb-5 sm:mb-8 transition-all duration-500">
               {formatUsd(balance)}
             </p>
           )}
           <Button
             onClick={() => setShowTopUp(true)}
-            className="w-full py-6 rounded-2xl font-black bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-600/20 text-white flex items-center justify-center gap-2"
+            className="w-full py-5 sm:py-6 rounded-2xl font-black bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-600/20 text-white flex items-center justify-center gap-2 btn-press ripple-effect transition-all duration-150 active:scale-[0.98] touch-target"
             disabled={userLoading}
           >
-            <Plus className="w-5 h-5" /> RECHARGE NOW
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" />
+            <span className="tracking-wider text-sm">RECHARGE NOW</span>
           </Button>
         </div>
 
         {/* STATS CARD */}
-        <div className="glass rounded-[2.5rem] p-8 border-white/5 flex flex-col justify-between">
+        <div className="glass rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 border-white/5 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 text-muted-foreground text-[10px] font-black uppercase tracking-widest mb-2 opacity-60">
               <Package className="w-3.5 h-3.5" /> Total Orders
             </div>
             {ordersLoading ? (
-              <Skeleton className="h-10 w-24 rounded-xl" />
+              <Skeleton className="h-9 w-20 rounded-xl" />
             ) : (
-              <p className="text-4xl font-black tracking-tighter">{orders.length}</p>
+              <p className="text-3xl sm:text-4xl font-black tracking-tighter">{orders.length}</p>
             )}
           </div>
           <div className="space-y-2 mt-4">
@@ -330,31 +329,31 @@ export default function Dashboard() {
             </div>
           </div>
           <Link to="/orders" className="mt-4 block">
-            <Button variant="ghost" size="sm" className="w-full rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 font-black text-[10px]">
+            <Button variant="ghost" size="sm" className="w-full rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 font-black text-[10px] touch-target">
               <ShoppingBag className="w-3.5 h-3.5 mr-2" /> VIEW ALL ORDERS
             </Button>
           </Link>
         </div>
 
         {/* QUICK ACTION CARD */}
-        <div className="gradient-primary rounded-[2.5rem] p-8 flex flex-col justify-between shadow-2xl shadow-primary/20 relative overflow-hidden group">
+        <div className="gradient-primary rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 flex flex-col justify-between shadow-2xl shadow-primary/20 relative overflow-hidden group">
           <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-white/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="space-y-1 relative z-10">
-            <p className="text-xl font-black text-white italic">Store Hub</p>
+            <p className="text-lg sm:text-xl font-black text-white italic">Store Hub</p>
             <p className="text-white/60 text-xs font-bold">Games & Social Services</p>
           </div>
           <Link to="/home" className="relative z-10">
-            <Button variant="secondary" className="mt-6 w-full py-6 rounded-2xl font-black shadow-lg hover:scale-[1.02] transition-transform">
-              DRIVE TO STORE <ArrowLeft className="w-4 h-4 ms-2 rotate-180" />
+            <Button variant="secondary" className="mt-4 sm:mt-6 w-full py-5 sm:py-6 rounded-2xl font-black shadow-lg hover:scale-[1.02] transition-transform text-sm touch-target">
+              TO STORE <ArrowLeft className="w-4 h-4 ms-2 rotate-180" />
             </Button>
           </Link>
         </div>
       </div>
 
       {/* PROMO CODE + REFERRAL (side by side on desktop) */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
         {/* PROMO CODE */}
-        <div className="glass rounded-[2rem] border-white/5 p-8 space-y-4">
+        <div className="glass rounded-[2rem] border-white/5 p-5 sm:p-8 space-y-4">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20">
               <Sparkles className="w-4 h-4 text-primary" />
@@ -372,7 +371,7 @@ export default function Dashboard() {
         </div>
 
         {/* REFERRAL */}
-        <div className="glass rounded-[2rem] border-white/5 p-8 space-y-4">
+        <div className="glass rounded-[2rem] border-white/5 p-5 sm:p-8 space-y-4">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
               <Gift className="w-4 h-4 text-amber-400" />
@@ -450,7 +449,7 @@ export default function Dashboard() {
           onClick={() => setShowTopUp(false)}
         >
           <div
-            className="bg-[#0a0a0a] border border-white/10 rounded-[3rem] max-w-md w-full p-10 space-y-8 shadow-[0_0_100px_rgba(16,185,129,0.1)]"
+            className="bg-[#0a0a0a] border border-white/10 rounded-[2rem] sm:rounded-[3rem] max-w-md w-full p-6 sm:p-10 space-y-6 sm:space-y-8 shadow-[0_0_100px_rgba(16,185,129,0.1)] max-h-[92dvh] overflow-y-auto scrollbar-hide"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -537,19 +536,21 @@ export default function Dashboard() {
       {/* RECENT PENDING REQUESTS */}
       {topUps.length > 0 && (
         <div className="glass rounded-[2rem] border-white/5 shadow-xl overflow-hidden">
-          <div className="px-8 py-5 border-b border-white/5 bg-white/[0.02]">
+          <div className="px-5 sm:px-8 py-4 sm:py-5 border-b border-white/5 bg-white/[0.02]">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Recent Recharge Requests</h3>
           </div>
           <div className="divide-y divide-white/5">
             {topUps.map((tu: any) => (
-              <div key={tu.id} className="px-8 py-4 flex items-center justify-between hover:bg-white/[0.01] transition-colors">
-                <div>
-                  <p className="font-bold text-sm tracking-tight">{formatUsd(Number(tu.amount))} Whish Transfer</p>
+              <div key={tu.id} className="px-5 sm:px-8 py-3.5 sm:py-4 flex items-center justify-between gap-3 hover:bg-white/[0.01] transition-colors">
+                <div className="min-w-0">
+                  <p className="font-bold text-sm tracking-tight truncate">{formatUsd(Number(tu.amount))} Whish Transfer</p>
                   <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
                     {format(new Date(tu.created_at), 'MMM d, HH:mm')}
                   </p>
                 </div>
-                <StatusBadge status={tu.status} />
+                <div className="shrink-0">
+                  <StatusBadge status={tu.status} />
+                </div>
               </div>
             ))}
           </div>
@@ -557,17 +558,17 @@ export default function Dashboard() {
       )}
 
       {/* TRANSACTION HISTORY */}
-      <div className="glass rounded-[2.5rem] border-white/5 shadow-2xl relative overflow-hidden">
-        <div className="px-8 py-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <h2 className="font-black text-2xl flex items-center gap-4 italic tracking-tighter">
-            <Clock className="w-6 h-6 text-primary" /> HUB LOGS
+      <div className="glass rounded-[2rem] sm:rounded-[2.5rem] border-white/5 shadow-2xl relative overflow-hidden">
+        <div className="px-5 sm:px-8 py-5 sm:py-8 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
+          <h2 className="font-black text-xl sm:text-2xl flex items-center gap-3 sm:gap-4 italic tracking-tighter">
+            <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-primary" /> HUB LOGS
           </h2>
-          <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5">
+          <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5 self-start sm:self-auto">
             {(['all', 'credit', 'debit'] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => { setTxFilter(f); setTxLimit(15) }}
-                className={`px-6 py-2 rounded-xl text-[9px] font-black transition-all ${
+                className={`px-4 sm:px-6 py-2 rounded-xl text-[9px] font-black transition-all touch-target min-h-0 ${
                   txFilter === f
                     ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-105'
                     : 'text-muted-foreground hover:bg-white/5'
@@ -580,7 +581,7 @@ export default function Dashboard() {
         </div>
 
         {txLoading ? (
-          <div className="p-8 space-y-4">
+          <div className="p-5 sm:p-8 space-y-3 sm:space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-16 w-full rounded-2xl" />
             ))}
@@ -593,7 +594,7 @@ export default function Dashboard() {
 
           if (filtered.length === 0) {
             return (
-              <div className="p-24 text-center text-muted-foreground text-xs font-black uppercase tracking-[0.3em] opacity-20 italic">
+              <div className="py-16 px-8 sm:p-24 text-center text-muted-foreground text-xs font-black uppercase tracking-[0.3em] opacity-20 italic">
                 No logs found.
               </div>
             )
@@ -608,31 +609,31 @@ export default function Dashboard() {
                   const isNeutral = txDir === 'neutral' || tx.status === 'rejected'
 
                   return (
-                    <div key={tx.id} className="flex items-center gap-6 px-10 py-6 hover:bg-white/[0.01] transition-colors group">
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border transition-all ${
+                    <div key={tx.id} className="flex items-center gap-3 sm:gap-6 px-4 sm:px-10 py-4 sm:py-6 hover:bg-white/[0.01] transition-colors group">
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 border transition-all ${
                         isNeutral
                           ? 'bg-muted border-white/5 text-muted-foreground shadow-inner'
                           : isCredit
                             ? 'bg-emerald-500/5 border-emerald-500/10 text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.05)]'
                             : 'bg-destructive/5 border-destructive/10 text-destructive shadow-[0_0_20px_rgba(239,68,68,0.05)]'
                       }`}>
-                        {isNeutral ? <Minus className="w-5 h-5" /> : isCredit ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                        {isNeutral ? <Minus className="w-4 h-4" /> : isCredit ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                       </div>
 
-                      <div className="flex-1">
-                        <p className="font-black text-[13px] tracking-tight group-hover:translate-x-1 transition-transform">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-[12px] sm:text-[13px] tracking-tight truncate group-hover:translate-x-1 transition-transform">
                           {tx.description ?? tx.method}
                         </p>
-                        <p className="text-[10px] text-muted-foreground font-black mt-1 uppercase tracking-widest opacity-40">
+                        <p className="text-[9px] sm:text-[10px] text-muted-foreground font-black mt-0.5 uppercase tracking-widest opacity-40">
                           {tx.created_at ? format(new Date(tx.created_at), 'MMM d, HH:mm') : '—'}
                         </p>
                       </div>
 
-                      <div className="text-right">
-                        <p className={`font-black text-lg tabular-nums tracking-tighter ${isNeutral ? 'text-muted-foreground' : isCredit ? 'text-emerald-500' : 'text-destructive'}`}>
+                      <div className="text-right shrink-0">
+                        <p className={`font-black text-sm sm:text-lg tabular-nums tracking-tighter ${isNeutral ? 'text-muted-foreground' : isCredit ? 'text-emerald-500' : 'text-destructive'}`}>
                           {isNeutral ? '' : isCredit ? '+' : '−'}{formatUsd(Number(tx.amount))}
                         </p>
-                        <div className="mt-2 flex justify-end">
+                        <div className="mt-1 sm:mt-2 flex justify-end">
                           <StatusBadge status={tx.status} />
                         </div>
                       </div>
@@ -641,10 +642,10 @@ export default function Dashboard() {
                 })}
               </div>
               {filtered.length > txLimit && (
-                <div className="p-10 text-center">
+                <div className="p-6 sm:p-10 text-center">
                   <Button
                     variant="ghost"
-                    className="text-[10px] font-black tracking-widest text-muted-foreground hover:text-primary transition-colors"
+                    className="text-[10px] font-black tracking-widest text-muted-foreground hover:text-primary transition-colors touch-target"
                     onClick={() => setTxLimit((l) => l + 15)}
                   >
                     LOAD MORE LOGS

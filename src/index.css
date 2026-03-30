@@ -69,25 +69,61 @@
 }
 
 @layer utilities {
+  /* Premium Glass Effect */
   .glass {
     @apply bg-card/60 backdrop-blur-xl border border-border/50;
   }
 
+  /* Enhanced Glow Effects */
   .glow {
-    box-shadow: 0 0 20px hsl(0 100% 50% / 0.15), 0 0 60px hsl(0 100% 50% / 0.05);
+    box-shadow: 
+      0 0 20px hsl(0 100% 50% / 0.15), 
+      0 0 60px hsl(0 100% 50% / 0.05),
+      inset 0 0 0 1px hsl(0 100% 50% / 0.05);
   }
 
+  .glow-emerald {
+    box-shadow: 
+      0 0 20px hsl(142 76% 36% / 0.2), 
+      0 0 60px hsl(142 76% 36% / 0.1),
+      inset 0 0 0 1px hsl(142 76% 36% / 0.1);
+  }
+
+  .glow-amber {
+    box-shadow: 
+      0 0 20px hsl(38 92% 50% / 0.2), 
+      0 0 60px hsl(38 92% 50% / 0.1),
+      inset 0 0 0 1px hsl(38 92% 50% / 0.1);
+  }
+
+  /* Premium Gradients */
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(0, 100%, 50%), hsl(0, 100%, 60%));
+    background: linear-gradient(135deg, hsl(0, 100%, 50%) 0%, hsl(0, 100%, 60%) 100%);
+  }
+
+  .gradient-primary-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .gradient-primary-hover:hover {
+    background: linear-gradient(135deg, hsl(0, 100%, 55%) 0%, hsl(0, 100%, 65%) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 40px hsl(0 100% 50% / 0.3);
+  }
+
+  .gradient-subtle {
+    background: linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
   }
 
   /* Hide scrollbar but keep functionality */
-  .scrollbar-hide {
+  .scrollbar-hide,
+  .no-scrollbar {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
   }
-  
-  .scrollbar-hide::-webkit-scrollbar {
+
+  .scrollbar-hide::-webkit-scrollbar,
+  .no-scrollbar::-webkit-scrollbar {
     display: none;  /* Chrome, Safari and Opera */
   }
 
@@ -110,6 +146,107 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  /* Premium Button Press Effect */
+  .btn-press {
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-press:active {
+    transform: scale(0.96);
+  }
+
+  /* Ripple Effect Container */
+  .ripple-effect {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ripple-effect::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  .ripple-effect:active::after {
+    width: 300px;
+    height: 300px;
+  }
+
+  /* Smooth Fade In Animation */
+  .fade-in-up {
+    animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Pulse Animation for Live Indicators */
+  .pulse-live {
+    animation: pulseLive 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulseLive {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.1);
+    }
+  }
+
+  /* Shimmer Loading Effect */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255,255,255,0.03) 0%,
+      rgba(255,255,255,0.08) 50%,
+      rgba(255,255,255,0.03) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  /* Gradient Text */
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(0, 100%, 50%) 0%, hsl(0, 100%, 60%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-emerald {
+    background: linear-gradient(135deg, hsl(142, 76%, 36%) 0%, hsl(142, 76%, 45%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   /* 3D TEXT EFFECT */
