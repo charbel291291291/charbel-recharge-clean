@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
-import { Zap, Shield, CreditCard } from 'lucide-react'
+import { Zap, Shield, CreditCard, Lock, Terminal } from 'lucide-react'
 import { useLanguage } from '@/i18n/LanguageContext'
 import { getErrorMessage } from '@/lib/errors'
 import { BrandLogo } from '@/components/BrandLogo'
@@ -27,6 +27,11 @@ export default function Auth() {
   const [loading, setLoading] = useState(false)
   const [resetSent, setResetSent] = useState(false)
   const [debugLoading, setDebugLoading] = useState(false)
+  
+  // HIDDEN DEBUG TRIGGER
+  const [showDebug, setShowDebug] = useState(false)
+  const [logoClicks, setLogoClicks] = useState(0)
+
   const [debug, setDebug] = useState<AuthDebugState>({
     sessionExists: false,
     userId: null,
@@ -40,7 +45,10 @@ export default function Auth() {
   const navigate = useNavigate()
   const { t } = useLanguage()
 
+  const isDev = import.meta.env.DEV;
+
   const refreshDebug = async () => {
+    if (!isDev && !showDebug) return;
     setDebugLoading(true)
 
     try {
@@ -52,8 +60,9 @@ export default function Auth() {
       let usersError: string | null = null
 
       if (currentUser?.id) {
-        const debugSelect = await supabase.from('users').select('*').single()
-        console.log('[Auth Debug] users single()', debugSelect.data, debugSelect.error)
+        if (isDev) {
+          console.log('[Auth Debug] checking users table for:', currentUser.id)
+        }
 
         const { data: usersRow, error } = await supabase
           .from('users')
@@ -93,8 +102,22 @@ export default function Auth() {
   }, [t])
 
   useEffect(() => {
-    void refreshDebug()
-  }, [user?.id, session?.access_token])
+    if (isDev || showDebug) {
+      void refreshDebug()
+    }
+  }, [user?.id, session?.access_token, showDebug])
+
+  const handleLogoClick = () => {
+    const nextCount = logoClicks + 1;
+    setLogoClicks(nextCount);
+    if (nextCount === 7) {
+      setShowDebug(!showDebug);
+      setLogoClicks(0);
+      if (!showDebug) toast.success("Developer debug mode activated");
+    }
+    // Reset click counter after 3 seconds of inactivity
+    setTimeout(() => setLogoClicks(0), 3000);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -148,47 +171,47 @@ export default function Auth() {
   ]
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background relative overflow-hidden">
+      {/* DECORATIVE BACKGROUND */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 -left-20 w-72 h-72 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute bottom-1/4 -right-20 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute top-1/4 -left-20 w-72 h-72 rounded-full bg-primary/10 blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 -right-20 w-80 h-80 rounded-full bg-primary/5 blur-3xl animate-pulse delay-700" />
       </div>
 
-      <div className="relative w-full max-w-md space-y-8">
+      <div className="relative w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
         <div className="text-center space-y-4">
-          <div className="flex justify-center">
-            <BrandLogo size="lg" className="mx-auto" />
+          <div className="flex justify-center cursor-help transition-transform active:scale-95" onClick={handleLogoClick}>
+            <BrandLogo size="lg" className="mx-auto drop-shadow-2xl" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-bold">
-            <span className="gradient-primary bg-clip-text text-transparent">Charbel Card</span>
+          <h1 className="brand-header-title text-4xl sm:text-5xl italic tracking-tighter">
+            CEDAR BOOST
           </h1>
-          <p className="text-muted-foreground text-sm">{t('brandTagline')}</p>
+          <p className="text-muted-foreground text-[10px] uppercase tracking-[0.4em] font-black opacity-60 italic">{t('brandTagline')}</p>
         </div>
 
-        <div className="glass rounded-2xl border border-border/50 p-8 shadow-xl dark:shadow-primary/5 space-y-6">
-          <div className="space-y-1 text-center">
-            <h2 className="text-xl font-heading font-semibold">{isLogin ? t('welcomeBack') : t('createAccount')}</h2>
-            <p className="text-muted-foreground text-sm">{isLogin ? t('signInToAccount') : t('getStarted')}</p>
+        <div className="glass rounded-[2.5rem] border border-white/5 p-8 shadow-2xl space-y-8">
+          <div className="space-y-2 text-center">
+            <h2 className="text-2xl font-black italic tracking-tighter">{isLogin ? t('welcomeBack') : t('createAccount')}</h2>
+            <p className="text-muted-foreground text-[10px] uppercase tracking-widest font-bold opacity-60">{isLogin ? t('signInToAccount') : t('getStarted')}</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <label htmlFor="auth-email" className="text-sm font-medium">
+              <label htmlFor="auth-email" className="text-[10px] uppercase font-black tracking-widest text-white/40 ml-2">
                 {t('email')}
               </label>
               <Input
                 id="auth-email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t('authEmailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                autoComplete="email"
-                className="bg-secondary/80 border-border"
+                className="h-14 bg-white/5 border-white/5 rounded-2xl px-6 focus:ring-primary/20 transition-all font-bold"
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="auth-password" className="text-sm font-medium">
+              <label htmlFor="auth-password" className="text-[10px] uppercase font-black tracking-widest text-white/40 ml-2">
                 {t('password')}
               </label>
               <Input
@@ -199,12 +222,11 @@ export default function Auth() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                autoComplete={isLogin ? 'current-password' : 'new-password'}
-                className="bg-secondary/80 border-border"
+                className="h-14 bg-white/5 border-white/5 rounded-2xl px-6 focus:ring-primary/20 transition-all font-bold"
               />
             </div>
-            <Button type="submit" className="w-full gradient-primary font-semibold" disabled={loading}>
-              {loading ? t('loading') : isLogin ? t('signIn') : t('signUp')}
+            <Button type="submit" className="h-14 w-full bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all text-xs uppercase tracking-widest" disabled={loading}>
+              {loading ? <Loader className="w-5 h-5 animate-spin" /> : isLogin ? t('signIn') : t('signUp')}
             </Button>
           </form>
 
@@ -212,7 +234,7 @@ export default function Auth() {
             <div className="text-center">
               <button
                 type="button"
-                className="text-xs text-primary hover:underline disabled:opacity-50"
+                className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60 hover:text-primary transition-colors disabled:opacity-50"
                 disabled={loading || resetSent}
                 onClick={() => void handleResetPassword()}
               >
@@ -221,55 +243,89 @@ export default function Auth() {
             </div>
           )}
 
-          <p className="text-center text-sm text-muted-foreground">
+          <p className="text-center text-xs font-bold text-muted-foreground">
             {isLogin ? t('noAccount') : t('hasAccount')}{' '}
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
               disabled={loading}
-              className="text-primary hover:underline font-medium"
+              className="text-primary hover:text-primary/80 transition-colors font-black uppercase tracking-widest ml-1"
             >
               {isLogin ? t('signUp') : t('signIn')}
             </button>
           </p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3 text-center sm:text-start max-w-lg mx-auto">
+        {/* FEATURES */}
+        <div className="grid gap-3 sm:grid-cols-3">
           {features.map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="flex flex-col sm:flex-row sm:items-start gap-2 rounded-xl bg-card/30 border border-border/40 p-3">
-              <div className="mx-auto sm:mx-0 p-2 rounded-lg bg-primary/10 w-fit">
+            <div key={title} className="flex flex-col items-center text-center gap-3 glass border-white/5 p-5 rounded-[1.5rem] group hover:bg-white/[0.03] transition-all duration-500">
+              <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20 group-hover:scale-110 transition-transform">
                 <Icon className="w-4 h-4 text-primary" />
               </div>
-              <div className="min-w-0">
-                <p className="font-medium text-foreground text-sm">{title}</p>
-                <p className="text-xs text-muted-foreground leading-snug">{desc}</p>
+              <div className="space-y-1">
+                <p className="font-black text-[10px] uppercase tracking-widest text-white">{title}</p>
+                <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-widest leading-relaxed opacity-50">{desc}</p>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="rounded-2xl border border-border/50 bg-card/60 p-4 space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h3 className="text-sm font-semibold">Auth Debug</h3>
-              <p className="text-xs text-muted-foreground">Session, user, and admin-role checks from the app.</p>
+        {/* SECURE DEBUG PANEL - DEV ONLY OR HIDDEN TRIGGER */}
+        {(isDev || (showDebug && debug.role === 'admin')) && (
+          <div className="glass border-primary/20 bg-primary/5 rounded-[2rem] p-6 space-y-4 animate-in zoom-in-95 duration-300">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Terminal className="w-4 h-4 text-primary" />
+                <div>
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-white">Kernel Debug Hub</h3>
+                  <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Production Protection Layer: ACTIVE</p>
+                </div>
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={() => void refreshDebug()} disabled={debugLoading} className="h-8 rounded-full text-[8px] font-black uppercase tracking-widest border-primary/20 bg-primary/10 text-primary">
+                {debugLoading ? 'Syncing...' : 'Force Sync'}
+              </Button>
             </div>
-            <Button type="button" variant="outline" size="sm" onClick={() => void refreshDebug()} disabled={debugLoading}>
-              {debugLoading ? 'Checking...' : 'Refresh'}
-            </Button>
-          </div>
 
-          <div className="space-y-1 text-xs font-mono break-all">
-            <p>session: {debug.sessionExists ? 'present' : 'missing'}</p>
-            <p>auth user id: {debug.userId ?? 'null'}</p>
-            <p>auth email: {debug.userEmail ?? 'null'}</p>
-            <p>public.users row: {debug.usersRowExists ? 'present' : 'missing'}</p>
-            <p>role: {debug.role ?? 'null'}</p>
-            <p>auth error: {debug.authError ?? 'none'}</p>
-            <p>users error: {debug.usersError ?? 'none'}</p>
+            <div className="grid grid-cols-1 gap-2 p-4 bg-black/40 rounded-2xl font-mono text-[9px] border border-white/5">
+              <div className="flex justify-between border-b border-white/5 pb-2">
+                <span className="text-white/40">SESSION_STATUS</span>
+                <span className={debug.sessionExists ? 'text-emerald-500' : 'text-red-500'}>{debug.sessionExists ? 'ENCRYPTED' : 'NOT_FOUND'}</span>
+              </div>
+              <div className="flex justify-between border-b border-white/5 py-2">
+                <span className="text-white/40">USER_AUTH_ID</span>
+                <span className="text-primary truncate ml-8">{debug.userId ?? 'NULL'}</span>
+              </div>
+              <div className="flex justify-between border-b border-white/5 py-2">
+                <span className="text-white/40">AUTH_EMAIL_HASH</span>
+                <span className="text-primary truncate ml-8">{debug.userEmail ?? 'NULL'}</span>
+              </div>
+              <div className="flex justify-between border-b border-white/5 py-2">
+                <span className="text-white/40">LEDGER_ROW</span>
+                <span className={debug.usersRowExists ? 'text-emerald-500' : 'text-amber-500'}>{debug.usersRowExists ? 'PRESENT' : 'ORPHANED'}</span>
+              </div>
+              <div className="flex justify-between pt-2">
+                <span className="text-white/40">PRIVILEGE_ROLE</span>
+                <span className="text-primary font-black uppercase">{debug.role ?? 'GUEST'}</span>
+              </div>
+            </div>
+            
+            {debug.authError && <p className="text-[8px] text-red-500 font-mono bg-red-500/10 p-2 rounded-lg border border-red-500/20 uppercase tracking-tighter">ERR: {debug.authError}</p>}
           </div>
-        </div>
+        )}
       </div>
+    </div>
+  )
+}
+
+function Loader({ className }: { className?: string }) {
+  return (
+    <div className={className}>
+       <div className="flex gap-1">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: `${i*0.2}s` }} />
+          ))}
+       </div>
     </div>
   )
 }
