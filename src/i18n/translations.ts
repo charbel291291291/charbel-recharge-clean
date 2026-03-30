@@ -256,7 +256,9 @@ export const translations = {
     selectPackage: 'Select Package',
     noPackagesForService: 'All packages for this service already have mappings.',
     noPackagesYet: 'No packages found. Add services and packages first.',
-  }    hubCenter: "Hub Center",
+
+    // Additional Keys
+    hubCenter: "Hub Center",
     hubCenterDesc: "Access your atomic ledger. Manage your wallet balance, check pending orders, and view transaction history.",
     cedarCard: "Cedar Card",
     cedarCardDesc: "Instant Gaming & Messaging Recharge. YoHo, YoHo Star, Xena, and SoulStar at the best rates.",
@@ -282,7 +284,7 @@ export const translations = {
     targetUrl: "Target URL/Account...",
     qtyPlaceholder: "Qty: e.g.",
     noServicesFound: "No services found.",
-  },,
+  },
   ar: {
     // Nav
     dashboard: 'لوحة التحكم',
@@ -538,7 +540,9 @@ export const translations = {
     selectPackage: 'اختر الباقة',
     noPackagesForService: 'جميع باقات هذه الخدمة لديها ربط بالفعل.',
     noPackagesYet: 'لا توجد باقات. أضف خدمات وباقات أولاً.',
-  }    hubCenter: "مركز التحكم",
+
+    // Additional Keys
+    hubCenter: "مركز التحكم",
     hubCenterDesc: "إدارة محفظتك رصيدك وتاريخ معاملاتك بكل سهولة وأمان.",
     cedarCard: "سيدار كارد",
     cedarCardDesc: "شحن فوري لتطبيقات YoHo و Xena و SoulStar بأفضل الأسعار في السوق.",
@@ -564,7 +568,7 @@ export const translations = {
     targetUrl: "الرابط / الحساب...",
     qtyPlaceholder: "الكمية: مثلا",
     noServicesFound: "لم يتم العثور على خدمات.",
-  },,
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations.en;
