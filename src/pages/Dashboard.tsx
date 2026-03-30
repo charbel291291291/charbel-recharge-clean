@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Wallet, Clock, ArrowRight, ArrowLeft, Package, Plus, Copy, Check, X, TrendingUp, TrendingDown, Minus, ChevronDown, MessageCircle, Phone, Send } from 'lucide-react'
+import { Wallet, Clock, ArrowRight, ArrowLeft, Package, Plus, Copy, Check, X, TrendingUp, TrendingDown, Minus, ChevronDown, MessageCircle, Phone, Send, Upload, FileText, Loader2 } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import StatusBadge from '@/components/StatusBadge'
@@ -23,6 +23,8 @@ export default function Dashboard() {
   const [copied, setCopied] = useState(false)
   const [txFilter, setTxFilter] = useState<'all' | 'credit' | 'debit'>('all')
   const [txLimit, setTxLimit] = useState(15)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
 
   const WHISH_NUMBER = "70-126177"
   const WHATSAPP_LINK = `https://wa.me/96170126177?text=Hello Charbel, I just sent a Whish transfer of ${topUpAmount}$ for my account ${user?.email}`
@@ -91,28 +93,55 @@ export default function Dashboard() {
   const handleManualConfirm = async () => {
     const amount = parseFloat(topUpAmount)
     if (!amount || amount <= 0) return toast.error("Please enter a valid amount.");
+    if (!selectedFile) return toast.error("Please upload payment proof (image).");
     
     setSubmitting(true)
     try {
+      // 1. Upload file to storage
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `${user?.id}/${Math.random()}.${fileExt}`;
+      const filePath = `proofs/${fileName}`;
+
+      const { error: uploadError, data: uploadData } = await supabase.storage
+        .from('receipts')
+        .upload(filePath, selectedFile);
+
+      if (uploadError) throw uploadError;
+
+      // 2. Get Public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('receipts')
+        .getPublicUrl(filePath);
+
+      // 3. Create deposit request
       // @ts-ignore
       const { error } = await supabase.from('deposit_requests').insert({
         user_id: user?.id,
         amount,
         method: 'WISH',
         status: 'pending',
-        proof: 'Manual Whish Transfer' // Required text field
+        proof: publicUrl // Store the ACTUAL image URL
       })
       if (error) throw error
 
-      toast.success("Request Sent to Admin! Please send proof on WhatsApp.")
+      toast.success("Request Sent! Admin will verify your receipt shortly.")
       setShowTopUp(false)
       setTopUpAmount('')
+      setSelectedFile(null)
       // @ts-ignore
       queryClient.invalidateQueries({ queryKey: ['deposit_requests'] })
     } catch (err: any) {
-      toast.error(err.message || "Failed to notify admin.")
+      toast.error(err.message || "Failed to submit request.")
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) return toast.error("File size is too large (max 5MB)");
+      setSelectedFile(file);
     }
   }
 
@@ -234,19 +263,42 @@ export default function Dashboard() {
                         className="h-14 bg-white/5 border-white/10 rounded-2xl px-6 text-lg font-black"
                     />
                  </div>
+
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Upload Proof (Screenshot)</label>
+                    <div className="relative group/file">
+                        <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={handleFileChange}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                        <div className={`h-24 bg-white/5 border border-dashed rounded-2xl flex flex-col items-center justify-center gap-2 transition-all group-hover/file:bg-white/[0.08] ${selectedFile ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-white/10'}`}>
+                           {selectedFile ? (
+                             <>
+                               <FileText className="w-6 h-6 text-emerald-500" />
+                               <span className="text-[10px] font-black text-emerald-500 uppercase truncate px-4">{selectedFile.name}</span>
+                             </>
+                           ) : (
+                             <>
+                               <Upload className="w-6 h-6 text-muted-foreground" />
+                               <span className="text-[10px] font-black text-muted-foreground uppercase">{t('clickToUpload')}</span>
+                             </>
+                           )}
+                        </div>
+                    </div>
+                 </div>
                  
                  <Button 
                     onClick={handleManualConfirm}
-                    disabled={submitting || !topUpAmount}
-                    className="w-full py-7 rounded-2xl bg-white text-black hover:bg-neutral-200 font-black text-md flex items-center justify-center gap-3 transition-all"
+                    disabled={submitting || !topUpAmount || !selectedFile}
+                    className="w-full py-7 rounded-2xl bg-white text-black hover:bg-neutral-200 font-black text-md flex items-center justify-center gap-3 transition-all mt-4"
                  >
-                    <Send className="w-5 h-5" /> {submitting ? "NOTIFYING..." : "CONFIRM TRANSFER"}
+                    {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />} {submitting ? "NOTIFYING..." : "CONFIRM TRANSFER"}
                  </Button>
 
-                 <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer" className="block">
-                    <Button variant="outline" className="w-full py-7 rounded-2xl border-[#25D366]/30 bg-[#25D366]/5 text-[#25D366] hover:bg-[#25D366]/10 font-black text-xs flex items-center justify-center gap-2">
-                        <MessageCircle className="w-4 h-4" /> SEND RECEIPT ON WHATSAPP (REQUIRED)
-                    </Button>
+                 <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer" className="block text-center mt-2">
+                    <p className="text-[9px] font-black text-muted-foreground underline hover:text-white transition-opacity">Problems? Message Support</p>
                  </a>
             </div>
           </div>
