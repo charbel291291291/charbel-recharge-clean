@@ -1,0 +1,24 @@
+{
+  "name": "Charbel Card",
+  "short_name": "CharbelCard",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a0e27",
+  "theme_color": "#0a0e27",
+  "description": "Premium digital recharge platform",
+  "icons": [
+    {
+      "src": "/charbel-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/charbel-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
