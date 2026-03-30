@@ -108,6 +108,7 @@ export default function CharbelCardPage() {
 
   useEffect(() => {
     const chatAppKeywords = ['Xena', 'YoHo', 'SoulStar', 'WhatsApp', 'Telegram', 'Messenger', 'IMOU', 'Azar'];
+    // @ts-ignore
     let query = supabase.from('smm_services').select('*').limit(2000).order('rate', { ascending: true });
     
     const filterString = chatAppKeywords.map(k => `name.ilike.%${k}%`).join(',');
