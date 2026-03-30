@@ -62,15 +62,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <span>{label}</span>
         </Link>
       ))}
-      {isAdmin && (
-         <Link
-          to="/admin"
-          className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest text-emerald-500 hover:bg-emerald-500/10 transition-all ${mobile ? 'w-full justify-start' : ''}`}
-        >
-          <ShieldIcon className="w-4 h-4" />
-          <span>{t('admin')}</span>
-        </Link>
-      )}
     </>
   );
 
@@ -92,15 +83,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <div className="container h-full flex items-center justify-between px-4 sm:px-8">
           
           <div className="flex items-center gap-4 sm:gap-8">
-             {/* LOGO */}
+             {/* LOGO & 3D NAME */}
             <div
               onClick={handleLogoClick}
               className="group flex items-center gap-3 shrink-0 cursor-pointer active:scale-95 transition-transform"
             >
               <BrandLogo size="sm" className="w-8 h-8 sm:w-10 sm:h-10 transition-transform group-hover:rotate-12" />
-              <div className="hidden lg:flex flex-col">
-                 <span className="font-black italic tracking-tighter text-lg leading-none">CEDAR HUB</span>
-                 <span className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.4em] mt-1 opacity-50">PRO ACCESS SYSTEM</span>
+              <div className="flex flex-col">
+                 <span className="brand-header-title text-base sm:text-xl leading-none">CEDAR BOOST</span>
+                 <span className="text-[7px] sm:text-[9px] font-black text-white/40 uppercase tracking-[0.4em] mt-1 italic">PREMIUM HUB</span>
               </div>
             </div>
 
@@ -140,7 +131,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <SheetContent side="right" className="glass border-white/10 w-[280px] p-6 flex flex-col gap-8">
                    <div className="flex items-center gap-3 mb-4">
                       <BrandLogo size="sm" />
-                      <span className="font-black italic tracking-tighter text-xl">CEDAR HUB</span>
+                      <span className="brand-header-title text-xl">CEDAR BOOST</span>
                    </div>
                    <div className="flex flex-col gap-2">
                        <NavLinks mobile />
