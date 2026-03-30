@@ -155,7 +155,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom', '@supabase/supabase-js'],
-          ui: ['lucide-react', 'recharts', 'framer-motion', 'sonner']
+          ui: ['lucide-react', 'recharts', 'sonner']
         }
       }
     }
