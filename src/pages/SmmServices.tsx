@@ -28,6 +28,13 @@ const ServiceCard = memo(({ service, onOrderSuccess, vipLevel = 1 }: any) => {
   const displayRate = vipPricing.discounted;
   const previewCost = (typeof qty === 'number' && qty > 0) ? (displayRate / 1000) * qty : 0;
 
+  // Sahl game top-up products store rate as per-1000 internally,
+  // but display should show per-item price (rate / 1000) since qty is 1-few.
+  const isSahl = String(service.service_id).startsWith('sahl_');
+  const shownPrice  = isSahl ? (displayRate / 1000) : displayRate;
+  const shownOriginal = isSahl ? (finalRate / 1000) : finalRate;
+  const priceLabel  = isSahl ? 'Per Item' : 'Per 1,000';
+
   const handleOrder = async () => {
     if (!link.trim()) return setError("Target URL is required.");
     const numQty = Number(qty);
@@ -91,14 +98,14 @@ const ServiceCard = memo(({ service, onOrderSuccess, vipLevel = 1 }: any) => {
           <div className="text-right">
             {vipPricing.hasDiscount && (
               <span className="text-[10px] line-through text-muted-foreground/60 block leading-none mb-0.5">
-                ${finalRate.toFixed(3)}
+                ${shownOriginal.toFixed(3)}
               </span>
             )}
             <span className="text-xl font-extrabold tracking-tight leading-none"
               style={{ color: vipPricing.hasDiscount ? getVipTier(vipLevel).color : 'hsl(var(--primary))' }}>
-              ${displayRate.toFixed(3)}
+              ${shownPrice.toFixed(3)}
             </span>
-            <p className="text-[10px] uppercase font-bold text-muted-foreground">Per 1,000</p>
+            <p className="text-[10px] uppercase font-bold text-muted-foreground">{priceLabel}</p>
             {vipPricing.hasDiscount && (
               <span className="text-[8px] font-black uppercase tracking-widest"
                 style={{ color: getVipTier(vipLevel).color }}>
@@ -118,7 +125,7 @@ const ServiceCard = memo(({ service, onOrderSuccess, vipLevel = 1 }: any) => {
         <div className="space-y-2">
           <input type="url" placeholder="Target URL..." value={link} onChange={(e) => { setLink(e.target.value); setError(null); }} className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:ring-1 focus:ring-primary" />
           <input type="number" placeholder={`Qty: e.g. ${service.min}`} value={qty} min={service.min} max={service.max} onChange={(e) => { setQty(e.target.value ? Number(e.target.value) : ''); setError(null); }} className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm font-mono focus:ring-1 focus:ring-primary" />
-          {previewCost > 0 && <p className="text-xs font-bold text-emerald-500 text-right">Cost: ${previewCost.toFixed(3)}</p>}
+          {previewCost > 0 && <p className="text-xs font-bold text-emerald-500 text-right">Cost: ${previewCost.toFixed(3)}{isSahl && qty && Number(qty) > 1 ? ` (${qty}× items)` : ''}</p>}
         </div>
         {error && <div className="text-[11px] font-bold text-destructive bg-destructive/10 px-2 py-1 rounded flex gap-1"><AlertCircle className="w-3 h-3"/> {error}</div>}
         {success && <div className="text-[11px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded flex gap-1"><CheckCircle2 className="w-3 h-3"/> {success}</div>}
