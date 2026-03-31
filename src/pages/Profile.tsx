@@ -6,16 +6,13 @@ import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { formatUsd } from '@/lib/formatCurrency'
-import { serviceIconFor } from '@/lib/serviceIcons'
 import StatusBadge from '@/components/StatusBadge'
-import CreateOrder from '@/components/CreateOrder'
 import { Skeleton } from '@/components/ui/skeleton'
 import VipCard, { VipBadge, VipLadder } from '@/components/VipCard'
-import { Crown } from 'lucide-react'
 import {
   ShieldCheck, Copy, Check, Wallet, ShoppingBag, ChevronRight,
   Gift, Key, Clock, Zap, Share2, Mail, Star, TrendingUp, LogOut,
-  Lock, Package, RefreshCw, ArrowLeft, CheckCircle2, Plus,
+  Lock, Package, RefreshCw, CheckCircle2, Crown, Rocket,
 } from 'lucide-react'
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
@@ -76,9 +73,6 @@ function RowItem({
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-type OrderView = 'services' | 'packages' | 'confirm' | 'done'
-
 export default function Profile() {
   const { user, signOut, resetPasswordForEmail } = useAuth()
   const queryClient = useQueryClient()
@@ -88,11 +82,6 @@ export default function Profile() {
   const [resetSent, setResetSent]       = useState(false)
   const [resetLoading, setResetLoading] = useState(false)
 
-  // New-order flow state
-  const [orderView, setOrderView]               = useState<OrderView>('services')
-  const [showOrderFlow, setShowOrderFlow]       = useState(false)
-  const [selectedService, setSelectedService]   = useState<{ id: string; name: string; image_url: string | null } | null>(null)
-  const [selectedPackage, setSelectedPackage]   = useState<{ id: string; name: string; price: number } | null>(null)
 
   // ── Queries ───────────────────────────────────────────────────────────────
   const { data: userRow, isLoading: userLoading } = useQuery({
@@ -145,26 +134,6 @@ export default function Profile() {
     staleTime: 30_000,
   })
 
-  const { data: services = [], isLoading: servicesLoading } = useQuery({
-    queryKey: ['services'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('services').select('*').order('name')
-      if (error) throw error
-      return data ?? []
-    },
-    enabled: showOrderFlow,
-  })
-
-  const { data: packages = [], isLoading: packagesLoading } = useQuery({
-    queryKey: ['packages', selectedService?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('packages').select('*').eq('service_id', selectedService!.id).order('price')
-      if (error) throw error
-      return data ?? []
-    },
-    enabled: !!selectedService,
-  })
 
   // ── Derived ───────────────────────────────────────────────────────────────
   const email        = user?.email ?? ''
@@ -213,22 +182,6 @@ export default function Profile() {
   const handleSignOut = async () => {
     queryClient.clear()
     await signOut()
-  }
-
-  const resetOrderFlow = () => {
-    setOrderView('services')
-    setSelectedService(null)
-    setSelectedPackage(null)
-  }
-
-  const openOrderFlow = () => {
-    resetOrderFlow()
-    setShowOrderFlow(true)
-  }
-
-  const closeOrderFlow = () => {
-    setShowOrderFlow(false)
-    resetOrderFlow()
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -316,170 +269,33 @@ export default function Profile() {
         <div className="h-40 rounded-[2rem] bg-white/[0.03] border border-white/5 animate-pulse" />
       ) : null}
 
-      {/* ── 4. NEW ORDER ─────────────────────────────────────────────────── */}
-      <div className="glass rounded-[2rem] border border-white/5 overflow-hidden">
-
-        {/* Header row — always visible */}
-        <div className="flex items-center justify-between p-5 sm:p-6">
-          <div className="flex items-center gap-2">
-            {showOrderFlow && orderView === 'packages' && (
-              <button
-                onClick={() => { setOrderView('services'); setSelectedService(null); setSelectedPackage(null) }}
-                className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all tap-feedback mr-1"
-              >
-                <ArrowLeft className="w-3.5 h-3.5 text-white/50" />
-              </button>
-            )}
-            <SectionHeader
-              icon={ShoppingBag}
-              label={
-                !showOrderFlow ? 'New Order' :
-                orderView === 'services' ? 'Select Service' :
-                orderView === 'packages' ? (selectedService?.name ?? 'Select Package') :
-                orderView === 'done' ? 'Order Placed!' : 'Confirm Order'
-              }
-            />
-          </div>
-          {!showOrderFlow ? (
-            <button
-              onClick={openOrderFlow}
-              className="flex items-center gap-1.5 h-8 px-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[9px] font-black uppercase tracking-widest hover:bg-primary/20 transition-all tap-feedback"
-            >
-              <Plus className="w-3 h-3" /> Start
-            </button>
-          ) : orderView !== 'done' && (
-            <button
-              onClick={closeOrderFlow}
-              className="text-[9px] font-black uppercase tracking-widest text-white/25 hover:text-white/50 transition-colors"
-            >
-              Cancel
-            </button>
-          )}
+      {/* ── 4. QUICK ACTIONS ─────────────────────────────────────────────── */}
+      <div className="glass rounded-[2rem] border border-white/5 p-5 sm:p-6 space-y-3">
+        <SectionHeader icon={ShoppingBag} label="Quick Actions" />
+        <div className="grid grid-cols-2 gap-3">
+          <Link to="/smm-engine"
+            className="flex flex-col items-start gap-3 p-4 rounded-2xl bg-primary/8 border border-primary/20 hover:bg-primary/15 transition-all tap-feedback active:scale-[0.98] group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center group-hover:bg-primary/25 transition-colors">
+              <Rocket className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-[11px] font-black text-white">SMM Engine</p>
+              <p className="text-[9px] font-bold text-white/35 mt-0.5">Followers · Likes · Views</p>
+            </div>
+          </Link>
+          <Link to="/dashboard"
+            className="flex flex-col items-start gap-3 p-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.07] transition-all tap-feedback active:scale-[0.98] group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+              <Zap className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-[11px] font-black text-white">Top Up Wallet</p>
+              <p className="text-[9px] font-bold text-white/35 mt-0.5">USDT · OMT · Wish</p>
+            </div>
+          </Link>
         </div>
-
-        {/* ── Flow content ── */}
-        {showOrderFlow && (
-          <div className="px-5 sm:px-6 pb-5 sm:pb-6 space-y-3">
-
-            {/* SERVICES GRID */}
-            {orderView === 'services' && (
-              servicesLoading ? (
-                <div className="grid grid-cols-2 gap-2">
-                  {[1,2,3,4].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)}
-                </div>
-              ) : services.length === 0 ? (
-                <p className="text-center text-[10px] font-black uppercase tracking-widest text-white/20 py-6">
-                  No services available
-                </p>
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  {(services as any[]).map((svc, i) => {
-                    const Icon = serviceIconFor(svc.name, i)
-                    return (
-                      <button
-                        key={svc.id}
-                        onClick={() => { setSelectedService({ id: svc.id, name: svc.name, image_url: svc.image_url }); setOrderView('packages') }}
-                        className="flex flex-col items-start gap-3 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.07] hover:border-primary/20 transition-all tap-feedback active:scale-[0.98] text-left group"
-                      >
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/15 transition-colors overflow-hidden shrink-0">
-                          {svc.image_url
-                            ? <img src={svc.image_url} alt="" className="w-full h-full object-cover" />
-                            : <Icon className="w-4.5 h-4.5 text-primary" />}
-                        </div>
-                        <span className="text-[10px] font-black uppercase tracking-wide text-white/80 leading-tight">{svc.name}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              )
-            )}
-
-            {/* PACKAGES LIST */}
-            {orderView === 'packages' && selectedService && (
-              packagesLoading ? (
-                <div className="space-y-2">
-                  {[1,2,3].map(i => <Skeleton key={i} className="h-14 rounded-2xl" />)}
-                </div>
-              ) : packages.length === 0 ? (
-                <p className="text-center text-[10px] font-black uppercase tracking-widest text-white/20 py-6">
-                  No packages available
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {(packages as any[]).map((pkg) => {
-                    const isSelected = selectedPackage?.id === pkg.id
-                    return (
-                      <button
-                        key={pkg.id}
-                        onClick={() => setSelectedPackage({ id: pkg.id, name: pkg.name, price: pkg.price })}
-                        className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-all tap-feedback active:scale-[0.99] ${
-                          isSelected
-                            ? 'bg-primary/10 border-primary/30 shadow-lg shadow-primary/10'
-                            : 'bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.06] hover:border-white/10'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                            isSelected ? 'border-primary bg-primary' : 'border-white/20'
-                          }`}>
-                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                          </div>
-                          <span className="text-[11px] font-black text-white/80">{pkg.name}</span>
-                        </div>
-                        <span className={`text-sm font-black tabular-nums ${isSelected ? 'text-primary' : 'text-white/50'}`}>
-                          {formatUsd(pkg.price)}
-                        </span>
-                      </button>
-                    )
-                  })}
-
-                  {selectedPackage && (
-                    <div className="pt-2">
-                      <CreateOrder
-                        serviceId={selectedService.id}
-                        packageId={selectedPackage.id}
-                        packageName={selectedPackage.name}
-                        packagePrice={selectedPackage.price}
-                        onSuccess={() => {
-                          setOrderView('done')
-                          void queryClient.invalidateQueries({ queryKey: ['profile-orders', user?.id] })
-                          void queryClient.invalidateQueries({ queryKey: ['users', user?.id] })
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              )
-            )}
-
-            {/* SUCCESS STATE */}
-            {orderView === 'done' && (
-              <div className="flex flex-col items-center gap-4 py-6 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                  <CheckCircle2 className="w-7 h-7 text-emerald-400" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-black text-sm text-white">Order Submitted!</p>
-                  <p className="text-[9px] font-bold text-white/35 uppercase tracking-widest">Admin will review shortly</p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={resetOrderFlow}
-                    className="h-9 px-4 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[9px] font-black uppercase tracking-widest hover:bg-primary/20 transition-all tap-feedback"
-                  >
-                    New Order
-                  </button>
-                  <button
-                    onClick={closeOrderFlow}
-                    className="h-9 px-4 rounded-xl bg-white/5 border border-white/10 text-white/50 text-[9px] font-black uppercase tracking-widest hover:bg-white/10 transition-all tap-feedback"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* ── 5. RECENT ORDERS ─────────────────────────────────────────────── */}
@@ -503,12 +319,12 @@ export default function Profile() {
               <ShoppingBag className="w-5 h-5 text-white/10" />
             </div>
             <p className="text-[10px] font-black uppercase tracking-widest text-white/20">No orders yet</p>
-            <button
-              onClick={openOrderFlow}
+            <Link
+              to="/smm-engine"
               className="text-[9px] font-black uppercase tracking-widest text-primary/50 hover:text-primary transition-colors mt-1"
             >
               Place your first order →
-            </button>
+            </Link>
           </div>
         ) : (
           <div className="space-y-2">
