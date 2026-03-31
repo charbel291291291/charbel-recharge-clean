@@ -10,6 +10,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import NotificationBell from '@/components/NotificationBell';
 import AdminPinVault from './AdminPinVault';
 import LanguageSelector from './LanguageSelector';
+import ActivityNotifications from './ActivityNotifications';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
@@ -205,6 +206,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           })}
         </div>
       </nav>
+
+      {/* ACTIVITY NOTIFICATIONS — global floating system */}
+      <ActivityNotifications />
 
       {/* PWA STATUS INDICATOR — Desktop only */}
       <div className="fixed bottom-3 right-3 sm:bottom-4 sm:right-4 z-40 hidden lg:block opacity-20 hover:opacity-100 transition-opacity">
