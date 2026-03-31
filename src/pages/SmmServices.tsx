@@ -4,6 +4,8 @@ import { Search, Loader2, CheckCircle2, AlertCircle, ShoppingCart, Layers, Chevr
 import { DashboardSkeletonGrid } from '../components/Skeletons';
 import { getFilteredServices, type SmmService } from '@/lib/smmServiceFilters';
 import { getServiceIcon } from '@/lib/serviceIcon';
+import { applyVipDiscount, getVipTier } from '@/lib/vip';
+import { VipBadge } from '@/components/VipCard';
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -14,7 +16,7 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-const ServiceCard = memo(({ service, onOrderSuccess }: any) => {
+const ServiceCard = memo(({ service, onOrderSuccess, vipLevel = 1 }: any) => {
   const [link, setLink] = useState('');
   const [qty, setQty] = useState<number | ''>('');
   const [loading, setLoading] = useState(false);
@@ -22,7 +24,9 @@ const ServiceCard = memo(({ service, onOrderSuccess }: any) => {
   const [success, setSuccess] = useState<string | null>(null);
 
   const finalRate = Number(service.rate);
-  const previewCost = (typeof qty === 'number' && qty > 0) ? (finalRate / 1000) * qty : 0;
+  const vipPricing = applyVipDiscount(finalRate, vipLevel);
+  const displayRate = vipPricing.discounted;
+  const previewCost = (typeof qty === 'number' && qty > 0) ? (displayRate / 1000) * qty : 0;
 
   const handleOrder = async () => {
     if (!link.trim()) return setError("Target URL is required.");
@@ -85,10 +89,22 @@ const ServiceCard = memo(({ service, onOrderSuccess }: any) => {
           </div>
           {/* Rate */}
           <div className="text-right">
-            <span className="text-xl font-extrabold text-primary tracking-tight leading-none">
-              ${finalRate.toFixed(3)}
+            {vipPricing.hasDiscount && (
+              <span className="text-[10px] line-through text-muted-foreground/60 block leading-none mb-0.5">
+                ${finalRate.toFixed(3)}
+              </span>
+            )}
+            <span className="text-xl font-extrabold tracking-tight leading-none"
+              style={{ color: vipPricing.hasDiscount ? getVipTier(vipLevel).color : 'hsl(var(--primary))' }}>
+              ${displayRate.toFixed(3)}
             </span>
             <p className="text-[10px] uppercase font-bold text-muted-foreground">Per 1,000</p>
+            {vipPricing.hasDiscount && (
+              <span className="text-[8px] font-black uppercase tracking-widest"
+                style={{ color: getVipTier(vipLevel).color }}>
+                -{vipPricing.discountPct}% VIP
+              </span>
+            )}
           </div>
         </div>
         <h3 className="font-bold text-sm text-foreground leading-snug line-clamp-2 h-10">{service.name}</h3>
@@ -125,6 +141,17 @@ export default function SmmServicesPage() {
   const debouncedSearch = useDebounce(searchQuery, 300);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [vipLevel, setVipLevel] = useState(1);
+
+  // Fetch user VIP level
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data?.user) return;
+      // @ts-ignore
+      supabase.from('users').select('vip_level').eq('id', data.user.id).single()
+        .then(({ data: u }: any) => { if (u?.vip_level) setVipLevel(u.vip_level); });
+    });
+  }, []);
 
   useEffect(() => {
     const chatAppKeywords = ['YoHo', 'Xena', 'SoulStar'];
@@ -200,7 +227,7 @@ export default function SmmServicesPage() {
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {currentlyVisible.map(service => <ServiceCard key={service.service_id} service={service} onOrderSuccess={() => window.dispatchEvent(new CustomEvent('balance-refresh-needed'))} />)}
+                {currentlyVisible.map(service => <ServiceCard key={service.service_id} service={service} vipLevel={vipLevel} onOrderSuccess={() => window.dispatchEvent(new CustomEvent('balance-refresh-needed'))} />)}
               </div>
               {visibleCount < filteredServices.length && (
                 <div className="mt-8 text-center">

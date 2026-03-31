@@ -988,6 +988,27 @@ export default function Admin() {
                       </td>
                       <td className="px-4 py-4 font-mono text-[10px] text-amber-400 font-black">{u.referral_code || '—'}</td>
                       <td className="px-4 py-4 font-black text-emerald-400 text-base">${Number(u.balance || 0).toFixed(2)}</td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-black px-2 py-1 rounded-lg border"
+                            style={{ color: ['#9CA3AF','#6B7280','#93C5FD','#60A5FA','#A78BFA','#8B5CF6','#FCD34D','#F59E0B','#F97316','#EC4899'][(u.vip_level||1)-1], borderColor: ['#9CA3AF','#6B7280','#93C5FD','#60A5FA','#A78BFA','#8B5CF6','#FCD34D','#F59E0B','#F97316','#EC4899'][(u.vip_level||1)-1] + '40', backgroundColor: ['#9CA3AF','#6B7280','#93C5FD','#60A5FA','#A78BFA','#8B5CF6','#FCD34D','#F59E0B','#F97316','#EC4899'][(u.vip_level||1)-1] + '15' }}>
+                            VIP {u.vip_level || 1}
+                          </span>
+                          <select
+                            defaultValue={u.vip_level || 1}
+                            onChange={async (e) => {
+                              const lvl = Number(e.target.value);
+                              // @ts-ignore
+                              const { error } = await supabase.rpc('admin_set_vip', { p_user_id: u.id, p_level: lvl });
+                              if (error) alert('Error: ' + error.message);
+                              else { u.vip_level = lvl; fetchAdminData(); }
+                            }}
+                            className="h-7 px-2 bg-white/5 border border-white/10 rounded-lg text-[9px] font-black text-white/60 focus:outline-none focus:ring-1 focus:ring-primary"
+                          >
+                            {[1,2,3,4,5,6,7,8,9,10].map(l => <option key={l} value={l}>Set VIP {l}</option>)}
+                          </select>
+                        </div>
+                      </td>
                       <td className="px-4 py-4 text-right">
                         <button onClick={() => updateBalance(u.id, Number(u.balance || 0))}
                           className="h-8 px-3 bg-white/5 border border-white/10 hover:border-primary hover:text-primary rounded-xl transition-all text-xs font-black flex items-center gap-1.5 ml-auto tap-feedback"
@@ -995,7 +1016,7 @@ export default function Admin() {
                       </td>
                     </tr>
                   ))}
-                  {filteredUsers.length === 0 && <tr><td colSpan={5} className="py-16 text-center text-muted-foreground">No users found.</td></tr>}
+                  {filteredUsers.length === 0 && <tr><td colSpan={6} className="py-16 text-center text-muted-foreground">No users found.</td></tr>}
                 </tbody>
               </table>
             </div>

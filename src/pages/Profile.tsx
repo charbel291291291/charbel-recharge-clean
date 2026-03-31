@@ -10,6 +10,8 @@ import { serviceIconFor } from '@/lib/serviceIcons'
 import StatusBadge from '@/components/StatusBadge'
 import CreateOrder from '@/components/CreateOrder'
 import { Skeleton } from '@/components/ui/skeleton'
+import VipCard, { VipBadge, VipLadder } from '@/components/VipCard'
+import { Crown } from 'lucide-react'
 import {
   ShieldCheck, Copy, Check, Wallet, ShoppingBag, ChevronRight,
   Gift, Key, Clock, Zap, Share2, Mail, Star, TrendingUp, LogOut,
@@ -97,12 +99,27 @@ export default function Profile() {
     queryKey: ['users', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('users').select('balance, referral_code, referred_by_id, role')
+        .from('users').select('balance, referral_code, referred_by_id, role, vip_level, total_spent')
         .eq('id', user!.id).single()
       if (error) throw error
       return data
     },
     enabled: !!user?.id,
+  })
+
+  const { data: vipStats } = useQuery({
+    queryKey: ['vip-stats', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_vip_stats')
+      if (error) throw error
+      return data as {
+        level: number; label: string; color: string; discount: number;
+        total_spent: number; next_level: number | null; next_label: string | null;
+        next_min_spent: number | null; next_discount: number | null; spent_to_next: number | null;
+      }
+    },
+    enabled: !!user?.id,
+    staleTime: 30_000,
   })
 
   const { data: orders = [], isLoading: ordersLoading } = useQuery({
@@ -157,6 +174,7 @@ export default function Profile() {
   const balance      = Number(userRow?.balance ?? 0)
   const isAdmin      = userRow?.role === 'admin'
   const referralCode = referralStats?.referral_code ?? userRow?.referral_code ?? null
+  const vipLevel     = userRow?.vip_level ?? 1
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const copyCode = () => {
@@ -243,6 +261,7 @@ export default function Profile() {
               <Clock className="w-3 h-3 text-white/35" />
               <span className="text-[9px] font-black uppercase tracking-widest text-white/35">Since {memberSince}</span>
             </div>
+            <VipBadge level={vipLevel} size="md" />
             {isAdmin && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
                 <Star className="w-3 h-3 text-amber-400" />
@@ -283,7 +302,21 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* ── 3. NEW ORDER ─────────────────────────────────────────────────── */}
+      {/* ── 3. VIP STATUS ────────────────────────────────────────────────── */}
+      {vipStats ? (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 px-1">
+            <Crown className="w-3.5 h-3.5 text-primary" />
+            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/35">VIP Status</span>
+          </div>
+          <VipCard stats={vipStats} />
+          <VipLadder currentLevel={vipStats.level} />
+        </div>
+      ) : userLoading ? (
+        <div className="h-40 rounded-[2rem] bg-white/[0.03] border border-white/5 animate-pulse" />
+      ) : null}
+
+      {/* ── 4. NEW ORDER ─────────────────────────────────────────────────── */}
       <div className="glass rounded-[2rem] border border-white/5 overflow-hidden">
 
         {/* Header row — always visible */}
@@ -449,7 +482,7 @@ export default function Profile() {
         )}
       </div>
 
-      {/* ── 4. RECENT ORDERS ─────────────────────────────────────────────── */}
+      {/* ── 5. RECENT ORDERS ─────────────────────────────────────────────── */}
       <div className="glass rounded-[2rem] border border-white/5 p-5 sm:p-6 space-y-4">
         <div className="flex items-center justify-between">
           <SectionHeader icon={Package} label="Recent Orders" />
