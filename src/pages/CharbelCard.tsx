@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, memo } from 'react';
+import React, { useState, useEffect, useMemo, memo, useCallback, useTransition } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Search, Loader2, CheckCircle2, AlertCircle, ShoppingCart,
@@ -201,6 +201,7 @@ export default function CharbelCardPage() {
   const debouncedSearch = useDebounce(searchQuery, 300);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [, startTransition] = useTransition();
 
   useEffect(() => {
     const chatAppKeywords = ['YoHo', 'Xena', 'SoulStar'];
@@ -323,7 +324,7 @@ export default function CharbelCardPage() {
                 <button
                   key={cat}
                   type="button"
-                  onClick={() => { setActiveCategory(cat); setSearchQuery(''); }}
+                  onClick={() => startTransition(() => { setActiveCategory(cat); setSearchQuery(''); })}
                   className={`w-full text-left px-4 py-3 rounded-2xl text-[12px] font-black transition-all duration-200 tap-feedback ${
                     activeCategory === cat
                       ? 'bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shadow-sm translate-x-1'

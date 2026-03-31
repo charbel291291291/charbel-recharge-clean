@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useTransition, memo } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
   Shield, RefreshCw, CheckCircle2, XCircle, Clock, Users as UsersIcon,
@@ -215,7 +215,7 @@ function Toggle({
 }
 
 // ─── Service visibility row ───────────────────────────────────────────────────
-function ServiceRow({
+const ServiceRow = memo(function ServiceRow({
   service,
   onToggle,
   onImageSave,
@@ -307,7 +307,7 @@ function ServiceRow({
       )}
     </div>
   );
-}
+});
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Admin() {
@@ -340,10 +340,18 @@ export default function Admin() {
   type ManagedService = SmmService & { _saving: Set<string> };
   const [smmServices, setSmmServices]         = useState<ManagedService[]>([]);
   const [smmServicesLoading, setSmmServicesLoading] = useState(false);
-  const [smmSearch, setSmmSearch]             = useState('');
+  const [smmSearchInput, setSmmSearchInput]   = useState('');  // raw input (not debounced)
+  const [smmSearch, setSmmSearch]             = useState('');  // debounced value used for filtering
   const [smmCategoryFilter, setSmmCategoryFilter] = useState<string>('all');
   const [smmPage, setSmmPage]                 = useState(0);
+  const [, startTransition]                   = useTransition();
   const SMM_PAGE_SIZE = 50;
+
+  // Debounce smmSearch — avoids filtering 3000 services on every keystroke
+  useEffect(() => {
+    const t = setTimeout(() => { setSmmSearch(smmSearchInput); setSmmPage(0); }, 280);
+    return () => clearTimeout(t);
+  }, [smmSearchInput]);
 
   // ── Fetch main data ────────────────────────────────────────────────────────
   const fetchAdminData = useCallback(async () => {
@@ -588,8 +596,49 @@ export default function Admin() {
     }
   }, []);
 
-  const filteredUsers  = users.filter(u => (u.email || '').toLowerCase().includes(searchQuery.toLowerCase()) || u.id.includes(searchQuery));
-  const filteredOrders = orders.filter(o => !searchQuery || users.find(u => u.id === o.user_id)?.email?.includes(searchQuery) || o.id.includes(searchQuery));
+  // Memoized filters — only recompute when data or query actually changes
+  const filteredUsers = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return users.filter(u => !q || (u.email || '').toLowerCase().includes(q) || u.id.includes(q));
+  }, [users, searchQuery]);
+
+  const filteredOrders = useMemo(() => {
+    if (!searchQuery) return orders;
+    const q = searchQuery.toLowerCase();
+    return orders.filter(o =>
+      o.id.includes(q) || users.find((u: any) => u.id === o.user_id)?.email?.toLowerCase().includes(q)
+    );
+  }, [orders, users, searchQuery]);
+
+  // Memoized services-tab computations — avoids re-filtering 3000 rows on every render
+  const smmCategories = useMemo(() =>
+    ['all', ...Array.from(new Set(smmServices.map(s => s.category))).sort()],
+  [smmServices]);
+
+  const smmDisplayedServices = useMemo(() => {
+    const q = smmSearch.toLowerCase();
+    return smmServices.filter(s => {
+      const matchCat    = smmCategoryFilter === 'all' || s.category === smmCategoryFilter;
+      const matchSearch = !q || s.name.toLowerCase().includes(q) || String(s.service_id).toLowerCase().includes(q);
+      return matchCat && matchSearch;
+    });
+  }, [smmServices, smmCategoryFilter, smmSearch]);
+
+  const smmPaginated  = useMemo(() =>
+    smmDisplayedServices.slice(smmPage * SMM_PAGE_SIZE, (smmPage + 1) * SMM_PAGE_SIZE),
+  [smmDisplayedServices, smmPage, SMM_PAGE_SIZE]);
+
+  const smmTotalPages = useMemo(() =>
+    Math.ceil(smmDisplayedServices.length / SMM_PAGE_SIZE),
+  [smmDisplayedServices.length, SMM_PAGE_SIZE]);
+
+  const smmStatCounts = useMemo(() => {
+    let active = 0, popular = 0, featured = 0;
+    for (const s of smmServices) {
+      if (s.is_active) { active++; if (s.show_in_popular) popular++; if (s.is_featured) featured++; }
+    }
+    return { active, popular, featured };
+  }, [smmServices]);
 
   const TABS = [
     { id: 'overview',  label: 'Overview',  icon: LayoutDashboard },
@@ -1115,26 +1164,8 @@ export default function Admin() {
       )}
 
       {/* ── SERVICES ───────────────────────────────────────────────────────── */}
-      {activeTab === 'services' && (() => {
-        const smmCategories = ['all', ...Array.from(new Set(smmServices.map(s => s.category))).sort()];
-
-        const displayedServices = smmServices
-          .filter(s => {
-            const matchCat = smmCategoryFilter === 'all' || s.category === smmCategoryFilter;
-            const q = smmSearch.toLowerCase();
-            const matchSearch = !q || s.name.toLowerCase().includes(q) || String(s.service_id).toLowerCase().includes(q);
-            return matchCat && matchSearch;
-          });
-
-        const paginated = displayedServices.slice(smmPage * SMM_PAGE_SIZE, (smmPage + 1) * SMM_PAGE_SIZE);
-        const totalPages = Math.ceil(displayedServices.length / SMM_PAGE_SIZE);
-
-        const activeCount   = smmServices.filter(s => s.is_active).length;
-        const popularCount  = smmServices.filter(s => s.is_active && s.show_in_popular).length;
-        const featuredCount = smmServices.filter(s => s.is_active && s.is_featured).length;
-
-        return (
-          <div className="space-y-4 sm:space-y-5 animate-in slide-in-from-left-4 duration-500">
+      {activeTab === 'services' && (
+        <div className="space-y-4 sm:space-y-5 animate-in slide-in-from-left-4 duration-500">
             {/* Header row */}
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex-1 min-w-0">
@@ -1156,9 +1187,9 @@ export default function Admin() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: 'Active', value: activeCount, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', icon: Eye },
-                { label: 'In Popular', value: popularCount, color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20', icon: Flame },
-                { label: 'Featured', value: featuredCount, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20', icon: Star },
+                { label: 'Active', value: smmStatCounts.active, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', icon: Eye },
+                { label: 'In Popular', value: smmStatCounts.popular, color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20', icon: Flame },
+                { label: 'Featured', value: smmStatCounts.featured, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20', icon: Star },
               ].map(({ label, value, color, bg, icon: Icon }) => (
                 <div key={label} className={`border rounded-2xl p-4 flex items-center gap-3 ${bg}`}>
                   <Icon className={`w-5 h-5 shrink-0 ${color}`} />
@@ -1184,14 +1215,14 @@ export default function Admin() {
                 <input
                   type="text"
                   placeholder="Search services..."
-                  value={smmSearch}
-                  onChange={e => { setSmmSearch(e.target.value); setSmmPage(0); }}
+                  value={smmSearchInput}
+                  onChange={e => setSmmSearchInput(e.target.value)}
                   className="w-full pl-9 pr-4 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                 />
               </div>
               <select
                 value={smmCategoryFilter}
-                onChange={e => { setSmmCategoryFilter(e.target.value); setSmmPage(0); }}
+                onChange={e => { startTransition(() => { setSmmCategoryFilter(e.target.value); setSmmPage(0); }); }}
                 className="px-3 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary sm:w-56"
               >
                 {smmCategories.map(c => (
@@ -1217,22 +1248,22 @@ export default function Admin() {
                   <RefreshCw className="w-6 h-6 animate-spin" />
                   <p className="text-xs font-bold">Loading services…</p>
                 </div>
-              ) : paginated.length === 0 ? (
+              ) : smmPaginated.length === 0 ? (
                 <div className="py-16 text-center text-muted-foreground">
                   <EyeOff className="w-8 h-8 mx-auto mb-3 opacity-30" />
                   <p className="text-xs font-bold">No services match your filters.</p>
                 </div>
               ) : (
-                paginated.map(service => (
+                smmPaginated.map(service => (
                   <ServiceRow key={service.service_id} service={service as any} onToggle={toggleServiceField} onImageSave={saveServiceImage} />
                 ))
               )}
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
+            {smmTotalPages > 1 && (
               <div className="flex items-center justify-between text-[10px] font-black text-white/40">
-                <span>{displayedServices.length} services · page {smmPage + 1}/{totalPages}</span>
+                <span>{smmDisplayedServices.length} services · page {smmPage + 1}/{smmTotalPages}</span>
                 <div className="flex gap-2">
                   <button
                     disabled={smmPage === 0}
@@ -1240,7 +1271,7 @@ export default function Admin() {
                     className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 transition-all"
                   >← Prev</button>
                   <button
-                    disabled={smmPage >= totalPages - 1}
+                    disabled={smmPage >= smmTotalPages - 1}
                     onClick={() => setSmmPage(p => p + 1)}
                     className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 transition-all"
                   >Next →</button>
@@ -1248,8 +1279,7 @@ export default function Admin() {
               </div>
             )}
           </div>
-        );
-      })()}
+      )}
 
       {/* ── SETTINGS ───────────────────────────────────────────────────────── */}
       {activeTab === 'settings' && (

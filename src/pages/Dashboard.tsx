@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useTransition, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -52,6 +52,7 @@ export default function Dashboard() {
   const [referralLoading, setReferralLoading] = useState(false)
   const [txFilter, setTxFilter] = useState<'all' | 'credit' | 'debit'>('all')
   const [txLimit, setTxLimit] = useState(15)
+  const [, startTransition] = useTransition()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [rechargeSuccess, setRechargeSuccess] = useState(false)
 
@@ -170,20 +171,34 @@ export default function Dashboard() {
 
   const balance = userRow?.balance ?? 0
 
+  // Memoize filtered transactions — avoids re-filtering on every render
+  const txFiltered = useMemo(() =>
+    (transactions as any[]).filter(tx =>
+      txFilter === 'all' ? true : (tx.direction ?? 'debit') === txFilter
+    ),
+  [transactions, txFilter])
+
+  const txVisible = useMemo(() => txFiltered.slice(0, txLimit), [txFiltered, txLimit])
+
+  // ── Handle filter tab click — low-priority update ────────────────────────────
+  const handleTxFilter = useCallback((f: 'all' | 'credit' | 'debit') => {
+    startTransition(() => { setTxFilter(f); setTxLimit(15); });
+  }, [startTransition])
+
   // ── Copy referral code ──────────────────────────────────────────────────────
-  const copyReferralCode = (code: string) => {
+  const copyReferralCode = useCallback((code: string) => {
     navigator.clipboard.writeText(code)
     setReferralCopied(true)
     setTimeout(() => setReferralCopied(false), 2000)
     toast.success('Referral code copied!')
-  }
+  }, [])
 
-  const copyNumber = () => {
+  const copyNumber = useCallback(() => {
     navigator.clipboard.writeText(WHISH_NUMBER)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
     toast.success('Whish Number Copied!')
-  }
+  }, [])
 
   // ── Apply referral ──────────────────────────────────────────────────────────
   const handleApplyReferral = async () => {
@@ -652,7 +667,7 @@ export default function Dashboard() {
               <button
                 key={f}
                 type="button"
-                onClick={() => { setTxFilter(f); setTxLimit(15) }}
+                onClick={() => handleTxFilter(f)}
                 className={`px-4 sm:px-5 py-1.5 rounded-lg text-[9px] font-black transition-all ${
                   txFilter === f
                     ? 'bg-primary text-white shadow-lg shadow-primary/25'
@@ -672,12 +687,7 @@ export default function Dashboard() {
             ))}
           </div>
         ) : (() => {
-          const filtered = transactions.filter((tx: any) =>
-            txFilter === 'all' ? true : (tx.direction ?? 'debit') === txFilter
-          )
-          const visible = filtered.slice(0, txLimit)
-
-          if (filtered.length === 0) {
+          if (txFiltered.length === 0) {
             return (
               <div className="py-16 px-8 sm:p-24 text-center text-muted-foreground text-xs font-black uppercase tracking-[0.3em] opacity-20 italic">
                 No logs found.
@@ -688,7 +698,7 @@ export default function Dashboard() {
           return (
             <>
               <div className="divide-y divide-white/5">
-                {visible.map((tx: any) => {
+                {txVisible.map((tx: any) => {
                   const txDir = (tx.direction ?? 'debit') as 'credit' | 'debit' | 'neutral'
                   const isCredit = txDir === 'credit'
                   const isNeutral = txDir === 'neutral' || tx.status === 'rejected'
@@ -727,7 +737,7 @@ export default function Dashboard() {
                   )
                 })}
               </div>
-              {filtered.length > txLimit && (
+              {txFiltered.length > txLimit && (
                 <div className="p-6 sm:p-10 text-center">
                   <Button
                     variant="ghost"

@@ -64,15 +64,15 @@ function NotifCard({
     setTimeout(() => onDismiss(item.id), 320);
   }, [item.id, onDismiss]);
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = useCallback(() => {
     setPaused(true);
     pausedAtRef.current = Date.now();
-  };
-  const handleMouseLeave = () => {
+  }, []);
+  const handleMouseLeave = useCallback(() => {
     // Shift start time forward by however long we paused
     startRef.current += Date.now() - pausedAtRef.current;
     setPaused(false);
-  };
+  }, []);
 
   const kindIcon: Record<string, React.ReactNode> = {
     purchase:  <ShoppingCart className="w-3.5 h-3.5 text-primary" />,

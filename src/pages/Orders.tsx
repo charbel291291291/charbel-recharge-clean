@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useTransition, useCallback, memo } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -184,6 +184,7 @@ export default function Orders() {
   const { user, session } = useAuth()
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState<StatusFilter>('all')
+  const [, startTransition] = useTransition()
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['orders-full', user?.id],
@@ -220,20 +221,31 @@ export default function Orders() {
     return () => { void supabase.removeChannel(channel) }
   }, [user?.id, queryClient])
 
-  const filtered = orders.filter((o: any) => {
-    if (filter === 'all') return true
-    if (filter === 'processing') return o.status === 'processing' || o.status === 'paid'
-    if (filter === 'failed') return o.status === 'failed' || o.status === 'rejected'
-    return o.status === filter
-  })
+  // Memoize counts — one pass through the array instead of 5 separate .filter() calls
+  const counts = useMemo(() => {
+    const c = { all: orders.length, pending: 0, processing: 0, completed: 0, failed: 0 }
+    for (const o of orders as any[]) {
+      const s = o.status
+      if (s === 'pending' || s === 'pending_payment_review') c.pending++
+      else if (s === 'processing' || s === 'paid') c.processing++
+      else if (s === 'completed') c.completed++
+      else if (s === 'failed' || s === 'rejected') c.failed++
+    }
+    return c
+  }, [orders])
 
-  const counts = {
-    all:        orders.length,
-    pending:    orders.filter((o: any) => o.status === 'pending' || o.status === 'pending_payment_review').length,
-    processing: orders.filter((o: any) => o.status === 'processing' || o.status === 'paid').length,
-    completed:  orders.filter((o: any) => o.status === 'completed').length,
-    failed:     orders.filter((o: any) => o.status === 'failed' || o.status === 'rejected').length,
-  }
+  const filtered = useMemo(() =>
+    (orders as any[]).filter(o => {
+      if (filter === 'all') return true
+      if (filter === 'processing') return o.status === 'processing' || o.status === 'paid'
+      if (filter === 'failed') return o.status === 'failed' || o.status === 'rejected'
+      return o.status === filter
+    }),
+  [orders, filter])
+
+  const handleFilter = useCallback((key: StatusFilter) => {
+    startTransition(() => setFilter(key))
+  }, [startTransition])
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-20">
@@ -271,7 +283,7 @@ export default function Orders() {
         {(Object.entries(FILTER_LABELS) as [StatusFilter, string][]).map(([key, label]) => (
           <button
             key={key}
-            onClick={() => setFilter(key)}
+            onClick={() => handleFilter(key)}
             className={`relative flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[10px] font-black transition-all whitespace-nowrap flex-shrink-0 ${
               filter === key
                 ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-105'

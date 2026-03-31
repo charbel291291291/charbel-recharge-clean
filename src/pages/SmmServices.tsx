@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, memo } from 'react';
+import React, { useState, useEffect, useMemo, memo, useCallback, useTransition } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, Loader2, CheckCircle2, AlertCircle, ShoppingCart, Layers, ChevronDown, Flame, SearchX, Rocket } from 'lucide-react';
 import { DashboardSkeletonGrid } from '../components/Skeletons';
@@ -149,6 +149,11 @@ export default function SmmServicesPage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [vipLevel, setVipLevel] = useState(1);
+  const [, startTransition] = useTransition();
+
+  const handleCategoryChange = useCallback((cat: string) => {
+    startTransition(() => { setActiveCategory(cat); setSearchQuery(''); });
+  }, [startTransition]);
 
   // Fetch user VIP level
   useEffect(() => {
@@ -211,7 +216,7 @@ export default function SmmServicesPage() {
             <h3 className="font-bold text-xs uppercase tracking-widest text-muted-foreground mb-4 ml-1">Categories</h3>
             <div className="space-y-1">
               {categories.map((cat: any) => (
-                <button key={cat} onClick={() => { setActiveCategory(cat); setSearchQuery(''); }} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${activeCategory === cat ? 'bg-primary text-primary-foreground font-black' : 'text-muted-foreground hover:bg-muted font-bold'}`}>
+                <button key={cat} onClick={() => handleCategoryChange(cat)} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${activeCategory === cat ? 'bg-primary text-primary-foreground font-black' : 'text-muted-foreground hover:bg-muted font-bold'}`}>
                   {cat === 'Popular Services' ? `🔥 ${cat}` : cat}
                 </button>
               ))}
