@@ -1,9 +1,10 @@
 import { ReactNode, useState, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { LogOut, Home, Rocket, Gamepad2, ShieldIcon, Menu, ShoppingBag, Wallet } from 'lucide-react';
+import { LogOut, Home, Rocket, Gamepad2, ShieldIcon, Menu, ShoppingBag, Wallet, User } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { useNotifications } from '@/hooks/useNotifications';
 import NotificationBell from '@/components/NotificationBell';
@@ -15,9 +16,17 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { signOut } = useAuth();
+  const queryClient = useQueryClient();
   const { data: isAdmin } = useAdminAccess();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    // Clear all cached query data before signing out so no stale user data
+    // remains in memory for the next visitor on this device.
+    queryClient.clear();
+    await signOut();
+  };
   const { t } = useLanguage();
   const { notifications, unreadCount, markAllRead, clearAll } = useNotifications();
   
@@ -50,6 +59,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     { to: '/smm-engine', label: t('smmEngine'), icon: Rocket },
     { to: '/orders', label: 'Orders', icon: ShoppingBag },
     { to: '/dashboard', label: 'Wallet', icon: Wallet },
+    { to: '/profile', label: 'Profile', icon: User },
   ];
 
   const NavLinks = ({ mobile }: { mobile?: boolean }) => (
@@ -120,7 +130,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </div>
 
             <button
-               onClick={signOut}
+               onClick={handleSignOut}
                className="p-2.5 sm:p-3 md:p-4 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 text-muted-foreground hover:bg-destructive/10 hover:text-destructive active:scale-95 transition-all ms-1 sm:ms-2"
             >
                <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
@@ -147,7 +157,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                       <LanguageSelector />
                    </div>
                    <button
-                     onClick={signOut}
+                     onClick={handleSignOut}
                      className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive font-black text-xs uppercase tracking-widest transition-all hover:bg-destructive/20 active:scale-95"
                    >
                      <LogOut className="w-4 h-4" /> Sign Out

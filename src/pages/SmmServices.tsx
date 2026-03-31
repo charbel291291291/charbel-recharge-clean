@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo, memo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, Loader2, CheckCircle2, AlertCircle, ShoppingCart, Layers, ChevronDown, Flame, SearchX, Rocket } from 'lucide-react';
 import { DashboardSkeletonGrid } from '../components/Skeletons';
+import { getFilteredServices, type SmmService } from '@/lib/smmServiceFilters';
+import { getServiceIcon } from '@/lib/serviceIcon';
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -57,13 +59,31 @@ const ServiceCard = memo(({ service, onOrderSuccess }: any) => {
     }
   };
 
+  const icon = getServiceIcon(service.name, service.category, service.image_url);
+
   return (
     <div className="group flex flex-col bg-card border border-border rounded-xl overflow-hidden hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300">
       <div className="p-4 border-b border-border relative overflow-hidden">
-        <div className="flex justify-between items-start mb-2 gap-2">
-          <span className="inline-flex items-center px-2 py-1 rounded bg-secondary text-secondary-foreground text-[10px] font-black tracking-widest uppercase">
-            ID: {service.service_id}
-          </span>
+        {/* Icon + rate row */}
+        <div className="flex justify-between items-start mb-3 gap-2">
+          {/* Brand icon */}
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden border border-white/10"
+            style={{ backgroundColor: `#${icon.bgColor}` }}
+          >
+            {icon.type === 'url' ? (
+              <img
+                src={icon.src}
+                alt=""
+                className="w-5 h-5 object-contain"
+                loading="lazy"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+              />
+            ) : (
+              <span className="text-base leading-none">{icon.letter}</span>
+            )}
+          </div>
+          {/* Rate */}
           <div className="text-right">
             <span className="text-xl font-extrabold text-primary tracking-tight leading-none">
               ${finalRate.toFixed(3)}
@@ -99,7 +119,7 @@ const ServiceCard = memo(({ service, onOrderSuccess }: any) => {
 const ITEMS_PER_PAGE = 30;
 
 export default function SmmServicesPage() {
-  const [services, setServices] = useState<any[]>([]);
+  const [services, setServices] = useState<SmmService[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -107,23 +127,24 @@ export default function SmmServicesPage() {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
   useEffect(() => {
-    // RESTORE ALL: Fetch all services BUT filter out Chat Apps
-    const chatAppKeywords = ['YoHo', 'Xena', 'SoulStar']; // YoHo includes YoHo Star
+    const chatAppKeywords = ['YoHo', 'Xena', 'SoulStar'];
     // @ts-ignore
-    let query = supabase.from('smm_services').select('*').limit(2000).order('rate', { ascending: true });
-    
-    // @ts-ignore
-    query.then(({ data }: { data: any[] | null }) => {
-      if (data) {
-        // Filter out ONLY the Cedar Card apps to leave "the others"
-        const others = data.filter(s => 
-          !chatAppKeywords.some(k => s.name.toLowerCase().includes(k.toLowerCase()))
-        );
-        setServices(others);
-        if (others.length > 0) setActiveCategory("Popular Services");
-      }
-      setLoading(false);
-    });
+    supabase
+      .from('smm_services')
+      .select('service_id, name, category, rate, min, max, is_active, show_in_popular, is_featured, image_url')
+      .limit(2000)
+      .order('rate', { ascending: true })
+      // @ts-ignore
+      .then(({ data }: { data: SmmService[] | null }) => {
+        if (data) {
+          const others = data.filter(s =>
+            !chatAppKeywords.some(k => s.name.toLowerCase().includes(k.toLowerCase()))
+          );
+          setServices(others);
+          if (others.length > 0) setActiveCategory('Popular Services');
+        }
+        setLoading(false);
+      });
   }, []);
 
   const categories = useMemo(() => {
@@ -133,18 +154,7 @@ export default function SmmServicesPage() {
 
   const filteredServices = useMemo(() => {
     setVisibleCount(ITEMS_PER_PAGE);
-    let filtered = services;
-    if (activeCategory === 'Popular Services') {
-        filtered = [...services].sort((a,b) => Number(a.rate) - Number(b.rate));
-    } else if (activeCategory) {
-        filtered = services.filter(s => s.category === activeCategory);
-    }
-
-    if (debouncedSearch) {
-      const q = debouncedSearch.toLowerCase();
-      filtered = filtered.filter(s => s.name.toLowerCase().includes(q) || String(s.service_id).includes(q) || s.category.toLowerCase().includes(q));
-    }
-    return filtered;
+    return getFilteredServices(services, activeCategory, debouncedSearch);
   }, [services, activeCategory, debouncedSearch]);
 
   const currentlyVisible = filteredServices.slice(0, visibleCount);

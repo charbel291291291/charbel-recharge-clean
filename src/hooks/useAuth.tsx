@@ -20,10 +20,12 @@ function redirectOrigin(): string {
   return `${window.location.origin}/auth`
 }
 
-async function syncSession() {
-  const { data, error } = await supabase.auth.getSession()
-  console.log('[Auth] session sync', data.session, error)
-  return { data, error }
+/** Strips OAuth/magic-link tokens from the URL bar without a page reload. */
+function cleanAuthHash(): void {
+  const { hash, pathname, search } = window.location
+  if (hash.includes('access_token') || hash.includes('type=')) {
+    window.history.replaceState(null, '', pathname + search)
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -32,20 +34,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // onAuthStateChange fires INITIAL_SESSION on first subscription, so a separate
+    // getSession() call is not needed and would create a race condition.
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('[Auth] event', event, session)
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
-    })
 
-    syncSession().then(({ data: { session } }) => {
-      console.log('[Auth] initial session', session)
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
+      // Remove OAuth / magic-link tokens from the URL bar after a successful sign-in
+      if (event === 'SIGNED_IN') {
+        cleanAuthHash()
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -57,31 +58,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       options: { emailRedirectTo: redirectOrigin() },
     })
-    if (error) return { error, user: null }
-
-    const { data: sessionData, error: sessionError } = await syncSession()
-    const currentUser = sessionData.session?.user ?? data.user ?? null
-    return { error: sessionError, user: currentUser }
+    return { error: error ?? null, user: data.user ?? null }
   }
 
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) return { error, user: null }
 
-    const { data: sessionData, error: sessionError } = await syncSession()
-    const currentSession = sessionData.session ?? data.session ?? null
-    const currentUser = currentSession?.user ?? data.user ?? null
-
-    setSession(currentSession)
-    setUser(currentUser)
-
-    if (sessionError) {
-      return { error: sessionError, user: null }
-    }
-
+    // onAuthStateChange (SIGNED_IN) will sync global state; return the user directly
+    // from the API response so the caller can act immediately.
+    const currentUser = data.session?.user ?? data.user ?? null
     if (!currentUser) {
       return {
-        error: new Error('Signed in, but no active session was found. Check your Supabase Auth settings and browser storage.'),
+        error: new Error(
+          'Signed in, but no active session was found. Check your Supabase Auth settings and browser storage.'
+        ),
         user: null,
       }
     }
@@ -91,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut()
+    // onAuthStateChange (SIGNED_OUT) will clear user/session state automatically.
   }
 
   const resetPasswordForEmail = async (email: string) => {

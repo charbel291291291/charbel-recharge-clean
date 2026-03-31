@@ -17,6 +17,7 @@ import { useLanguage } from '@/i18n/LanguageContext'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { formatUsd } from '@/lib/formatCurrency'
+import { uploadPaymentProof, PAYMENT_PROOFS_BUCKET } from '@/lib/uploadProof'
 
 // ─── Animated balance delta toast ─────────────────────────────────────────────
 function BalanceDelta({ delta, onDone }: { delta: number; onDone: () => void }) {
@@ -216,16 +217,8 @@ export default function Dashboard() {
 
     setSubmitting(true)
     try {
-      const fileExt = selectedFile.name.split('.').pop()
-      const fileName = `${user?.id}/${Math.random()}.${fileExt}`
-      const filePath = `proofs/${fileName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('receipts')
-        .upload(filePath, selectedFile)
-      if (uploadError) throw uploadError
-
-      const { data: { publicUrl } } = supabase.storage.from('receipts').getPublicUrl(filePath)
+      const { path } = await uploadPaymentProof(selectedFile, user!.id, 'topups')
+      const { data: { publicUrl } } = supabase.storage.from(PAYMENT_PROOFS_BUCKET).getPublicUrl(path)
 
       // @ts-ignore
       const { error } = await supabase.from('deposit_requests').insert({

@@ -14,13 +14,13 @@ import { Loader2, ShieldCheck, Zap } from "lucide-react";
 
 const Auth = lazy(() => import("./pages/Auth"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Services = lazy(() => import("./pages/Services"));
 const Admin = lazy(() => import("./pages/Admin"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const HomePage = lazy(() => import("./pages/HomePage"));
 const SmmServices = lazy(() => import("./pages/SmmServices"));
 const CharbelCard = lazy(() => import("./pages/CharbelCard"));
 const Orders = lazy(() => import("./pages/Orders"));
+const Profile = lazy(() => import("./pages/Profile"));
 const Offline = lazy(() => import("./pages/Offline"));
 
 const queryClient = new QueryClient();
@@ -183,17 +183,18 @@ const App = () => (
                 }
               />
               <Route
-                path="/services"
+                path="/profile"
                 element={
                   <ProtectedRoute>
                     <Suspense fallback={<RouteLoading />}>
                       <RouteErrorBoundary>
-                        <Services />
+                        <Profile />
                       </RouteErrorBoundary>
                     </Suspense>
                   </ProtectedRoute>
                 }
               />
+
               <Route
                 path="/admin"
                 element={

@@ -4,8 +4,11 @@ import {
   Shield, RefreshCw, CheckCircle2, XCircle, Clock, Users as UsersIcon,
   DollarSign, Activity, LayoutDashboard, ShoppingCart, ListOrdered,
   Edit, Search, Settings, BarChart2, TrendingUp, Zap, Trash2,
-  CheckSquare, Square, AlertTriangle, Package, ArrowUpRight,
+  CheckSquare, Square, AlertTriangle, Package, ArrowUpRight, Layers,
+  Star, Eye, EyeOff, Flame,
 } from 'lucide-react';
+import type { SmmService } from '@/lib/smmServiceFilters';
+import { getServiceIcon } from '@/lib/serviceIcon';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
@@ -169,6 +172,143 @@ function UserCard({ u, onEdit }: any) {
   );
 }
 
+// ─── Toggle switch ────────────────────────────────────────────────────────────
+function Toggle({
+  checked,
+  onChange,
+  loading = false,
+  label,
+  colorClass = 'bg-emerald-500',
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  loading?: boolean;
+  label?: string;
+  colorClass?: string;
+}) {
+  return (
+    <label className="flex items-center gap-2 cursor-pointer select-none group">
+      <div
+        className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${
+          checked ? colorClass : 'bg-white/10'
+        } ${loading ? 'opacity-50 pointer-events-none' : ''}`}
+        onClick={() => !loading && onChange(!checked)}
+      >
+        <span
+          className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${
+            checked ? 'translate-x-4' : 'translate-x-0'
+          }`}
+        />
+        {loading && (
+          <span className="absolute inset-0 flex items-center justify-center">
+            <RefreshCw className="w-2.5 h-2.5 text-white animate-spin" />
+          </span>
+        )}
+      </div>
+      {label && (
+        <span className={`text-[10px] font-black uppercase tracking-widest ${checked ? 'text-white/80' : 'text-white/30'}`}>
+          {label}
+        </span>
+      )}
+    </label>
+  );
+}
+
+// ─── Service visibility row ───────────────────────────────────────────────────
+function ServiceRow({
+  service,
+  onToggle,
+  onImageSave,
+}: {
+  service: SmmService & { _saving?: Set<string> };
+  onToggle: (serviceId: string, field: 'is_active' | 'show_in_popular' | 'is_featured', value: boolean) => void;
+  onImageSave: (serviceId: string, url: string) => Promise<void>;
+}) {
+  const saving = (service as any)._saving as Set<string> | undefined;
+  const [editingImg, setEditingImg] = useState(false);
+  const [imgInput, setImgInput] = useState(service.image_url ?? '');
+  const [imgSaving, setImgSaving] = useState(false);
+  const icon = getServiceIcon(service.name, service.category, service.image_url);
+
+  return (
+    <div className={`border-b border-white/[0.04] last:border-0 transition-colors ${!service.is_active ? 'opacity-40' : ''}`}>
+      <div className="flex items-center gap-3 px-4 py-3">
+        {/* Brand icon */}
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 overflow-hidden border border-white/10 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
+          style={{ backgroundColor: `#${icon.bgColor}` }}
+          onClick={() => setEditingImg(e => !e)}
+          title="Click to set custom image URL"
+        >
+          {icon.type === 'url' ? (
+            <img src={icon.src} alt="" className="w-4 h-4 object-contain" loading="lazy"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+          ) : (
+            <span className="text-sm leading-none">{icon.letter}</span>
+          )}
+        </div>
+
+        {/* Service info */}
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold text-white/90 truncate leading-snug">{service.name}</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest truncate">{service.category}</span>
+            <span className="text-[9px] font-mono text-primary/50">${Number(service.rate).toFixed(3)}/1k</span>
+          </div>
+        </div>
+
+        {/* Toggles */}
+        <div className="flex items-center gap-4 shrink-0">
+          {(['is_active', 'show_in_popular', 'is_featured'] as const).map((field) => {
+            const labels: Record<string, string> = { is_active: 'Active', show_in_popular: 'Popular', is_featured: 'Featured' };
+            const colors: Record<string, string> = { is_active: 'bg-emerald-500', show_in_popular: 'bg-blue-500', is_featured: 'bg-amber-500' };
+            return (
+              <div key={field} className="flex flex-col items-center gap-1">
+                <Toggle
+                  checked={service[field] as boolean}
+                  onChange={v => onToggle(service.service_id, field, v)}
+                  loading={saving?.has(field)}
+                  colorClass={colors[field]}
+                />
+                <span className="text-[8px] font-black uppercase tracking-widest text-white/25">{labels[field]}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Inline image URL editor */}
+      {editingImg && (
+        <div className="px-4 pb-3 flex items-center gap-2">
+          <input
+            type="url"
+            placeholder="Paste image URL (or leave empty to use auto-detect)…"
+            value={imgInput}
+            onChange={e => setImgInput(e.target.value)}
+            className="flex-1 px-3 py-2 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+          <button
+            disabled={imgSaving}
+            onClick={async () => {
+              setImgSaving(true);
+              await onImageSave(service.service_id, imgInput.trim());
+              setImgSaving(false);
+              setEditingImg(false);
+            }}
+            className="px-3 py-2 bg-primary/10 border border-primary/20 text-primary rounded-lg text-[10px] font-black hover:bg-primary hover:text-white transition-all disabled:opacity-50 flex items-center gap-1.5"
+          >
+            {imgSaving ? <RefreshCw className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+            Save
+          </button>
+          <button onClick={() => setEditingImg(false)} className="px-3 py-2 bg-white/5 rounded-lg text-[10px] font-black text-white/40 hover:text-white transition-all">
+            Cancel
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Admin() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -195,6 +335,15 @@ export default function Admin() {
   // Bulk order management
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading]       = useState(false);
+
+  // Services visibility management
+  type ManagedService = SmmService & { _saving: Set<string> };
+  const [smmServices, setSmmServices]         = useState<ManagedService[]>([]);
+  const [smmServicesLoading, setSmmServicesLoading] = useState(false);
+  const [smmSearch, setSmmSearch]             = useState('');
+  const [smmCategoryFilter, setSmmCategoryFilter] = useState<string>('all');
+  const [smmPage, setSmmPage]                 = useState(0);
+  const SMM_PAGE_SIZE = 50;
 
   // ── Fetch main data ────────────────────────────────────────────────────────
   const fetchAdminData = useCallback(async () => {
@@ -346,16 +495,110 @@ export default function Admin() {
     }
   };
 
+  // ── SMM service fetch ──────────────────────────────────────────────────────
+  const fetchSmmServices = useCallback(async () => {
+    setSmmServicesLoading(true);
+    try {
+      // @ts-ignore
+      const { data, error } = await supabase
+        .from('smm_services')
+        .select('service_id, name, category, rate, min, max, is_active, show_in_popular, is_featured, image_url')
+        .order('category', { ascending: true })
+        .order('rate', { ascending: true })
+        .limit(3000);
+      if (error) throw error;
+      setSmmServices((data ?? []).map((s: any) => ({ ...s, _saving: new Set() })));
+    } catch (err) {
+      console.error('SMM services fetch error:', err);
+    } finally {
+      setSmmServicesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'services') fetchSmmServices();
+  }, [activeTab]);
+
+  // ── SMM visibility toggle (optimistic) ────────────────────────────────────
+  const toggleServiceField = useCallback(
+    async (serviceId: string, field: 'is_active' | 'show_in_popular' | 'is_featured', value: boolean) => {
+      // Optimistic update + mark saving
+      setSmmServices(prev =>
+        prev.map(s => {
+          if (s.service_id !== serviceId) return s;
+          const saving = new Set(s._saving);
+          saving.add(field);
+          return { ...s, [field]: value, _saving: saving };
+        })
+      );
+
+      try {
+        // @ts-ignore
+        const { error } = await supabase
+          .from('smm_services')
+          .update({ [field]: value })
+          .eq('service_id', serviceId);
+        if (error) throw error;
+      } catch (err: any) {
+        // Revert on failure
+        setSmmServices(prev =>
+          prev.map(s => {
+            if (s.service_id !== serviceId) return s;
+            const saving = new Set(s._saving);
+            saving.delete(field);
+            return { ...s, [field]: !value, _saving: saving };
+          })
+        );
+        alert(`Failed to update ${field}: ${err.message}`);
+        return;
+      }
+
+      // Clear saving flag
+      setSmmServices(prev =>
+        prev.map(s => {
+          if (s.service_id !== serviceId) return s;
+          const saving = new Set(s._saving);
+          saving.delete(field);
+          return { ...s, _saving: saving };
+        })
+      );
+    },
+    []
+  );
+
+  // ── Save custom image URL for a service ───────────────────────────────────
+  const saveServiceImage = useCallback(async (serviceId: string, url: string) => {
+    const imageUrl = url || null;
+    setSmmServices(prev =>
+      prev.map(s => s.service_id === serviceId ? { ...s, image_url: imageUrl } : s)
+    );
+    try {
+      // @ts-ignore
+      const { error } = await supabase
+        .from('smm_services')
+        .update({ image_url: imageUrl })
+        .eq('service_id', serviceId);
+      if (error) throw error;
+    } catch (err: any) {
+      alert(`Failed to save image: ${err.message}`);
+      // revert
+      setSmmServices(prev =>
+        prev.map(s => s.service_id === serviceId ? { ...s, image_url: s.image_url } : s)
+      );
+    }
+  }, []);
+
   const filteredUsers  = users.filter(u => (u.email || '').toLowerCase().includes(searchQuery.toLowerCase()) || u.id.includes(searchQuery));
   const filteredOrders = orders.filter(o => !searchQuery || users.find(u => u.id === o.user_id)?.email?.includes(searchQuery) || o.id.includes(searchQuery));
 
   const TABS = [
-    { id: 'overview',  label: 'Overview',         icon: LayoutDashboard },
-    { id: 'analytics', label: 'Analytics',         icon: BarChart2 },
-    { id: 'orders',    label: 'Orders',            icon: ShoppingCart },
-    { id: 'users',     label: 'Users',             icon: UsersIcon },
-    { id: 'deposits',  label: 'Deposits',          icon: DollarSign },
-    { id: 'settings',  label: 'Settings',          icon: Settings },
+    { id: 'overview',  label: 'Overview',  icon: LayoutDashboard },
+    { id: 'analytics', label: 'Analytics', icon: BarChart2 },
+    { id: 'orders',    label: 'Orders',    icon: ShoppingCart },
+    { id: 'users',     label: 'Users',     icon: UsersIcon },
+    { id: 'deposits',  label: 'Deposits',  icon: DollarSign },
+    { id: 'services',  label: 'Services',  icon: Layers },
+    { id: 'settings',  label: 'Settings',  icon: Settings },
   ];
 
   return (
@@ -850,6 +1093,143 @@ export default function Admin() {
         </div>
       )}
 
+      {/* ── SERVICES ───────────────────────────────────────────────────────── */}
+      {activeTab === 'services' && (() => {
+        const smmCategories = ['all', ...Array.from(new Set(smmServices.map(s => s.category))).sort()];
+
+        const displayedServices = smmServices
+          .filter(s => {
+            const matchCat = smmCategoryFilter === 'all' || s.category === smmCategoryFilter;
+            const q = smmSearch.toLowerCase();
+            const matchSearch = !q || s.name.toLowerCase().includes(q) || String(s.service_id).toLowerCase().includes(q);
+            return matchCat && matchSearch;
+          });
+
+        const paginated = displayedServices.slice(smmPage * SMM_PAGE_SIZE, (smmPage + 1) * SMM_PAGE_SIZE);
+        const totalPages = Math.ceil(displayedServices.length / SMM_PAGE_SIZE);
+
+        const activeCount   = smmServices.filter(s => s.is_active).length;
+        const popularCount  = smmServices.filter(s => s.is_active && s.show_in_popular).length;
+        const featuredCount = smmServices.filter(s => s.is_active && s.is_featured).length;
+
+        return (
+          <div className="space-y-4 sm:space-y-5 animate-in slide-in-from-left-4 duration-500">
+            {/* Header row */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <h2 className="font-black text-lg sm:text-xl flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-primary" /> Service Visibility
+                </h2>
+                <p className="text-muted-foreground text-xs mt-0.5">Control which services are visible and where they appear.</p>
+              </div>
+              <button
+                onClick={() => { setSmmPage(0); fetchSmmServices(); }}
+                disabled={smmServicesLoading}
+                className="h-9 px-4 bg-white/[0.05] border border-white/[0.09] rounded-xl font-black text-[10px] text-white/60 hover:text-white hover:bg-white/[0.09] transition-all flex items-center gap-2 disabled:opacity-40 tap-feedback shrink-0"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${smmServicesLoading ? 'animate-spin text-primary' : ''}`} />
+                Refresh
+              </button>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: 'Active', value: activeCount, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', icon: Eye },
+                { label: 'In Popular', value: popularCount, color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20', icon: Flame },
+                { label: 'Featured', value: featuredCount, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20', icon: Star },
+              ].map(({ label, value, color, bg, icon: Icon }) => (
+                <div key={label} className={`border rounded-2xl p-4 flex items-center gap-3 ${bg}`}>
+                  <Icon className={`w-5 h-5 shrink-0 ${color}`} />
+                  <div>
+                    <p className={`text-xl font-black ${color}`}>{value}</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-white/30">{label}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Legend */}
+            <div className="flex flex-wrap gap-3 text-[9px] font-black uppercase tracking-widest text-white/40">
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" /> Active — visible in all tabs</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" /> Popular — shown in 🔥 Popular tab</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" /> Featured — highlighted hero section</span>
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search services..."
+                  value={smmSearch}
+                  onChange={e => { setSmmSearch(e.target.value); setSmmPage(0); }}
+                  className="w-full pl-9 pr-4 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                />
+              </div>
+              <select
+                value={smmCategoryFilter}
+                onChange={e => { setSmmCategoryFilter(e.target.value); setSmmPage(0); }}
+                className="px-3 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary sm:w-56"
+              >
+                {smmCategories.map(c => (
+                  <option key={c} value={c}>{c === 'all' ? 'All Categories' : c}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Table */}
+            <div className="bg-card border border-border rounded-[1.5rem] overflow-hidden">
+              {/* Column headers */}
+              <div className="flex items-center gap-3 px-4 py-2.5 bg-white/[0.03] border-b border-white/[0.06]">
+                <span className="flex-1 text-[9px] font-black uppercase tracking-widest text-white/30">Service</span>
+                <div className="flex items-center gap-4 shrink-0 pr-1">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-emerald-500/60 w-14 text-center">Active</span>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-blue-500/60 w-14 text-center">Popular</span>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-amber-500/60 w-14 text-center">Featured</span>
+                </div>
+              </div>
+
+              {smmServicesLoading ? (
+                <div className="py-16 flex flex-col items-center gap-3 text-muted-foreground">
+                  <RefreshCw className="w-6 h-6 animate-spin" />
+                  <p className="text-xs font-bold">Loading services…</p>
+                </div>
+              ) : paginated.length === 0 ? (
+                <div className="py-16 text-center text-muted-foreground">
+                  <EyeOff className="w-8 h-8 mx-auto mb-3 opacity-30" />
+                  <p className="text-xs font-bold">No services match your filters.</p>
+                </div>
+              ) : (
+                paginated.map(service => (
+                  <ServiceRow key={service.service_id} service={service as any} onToggle={toggleServiceField} onImageSave={saveServiceImage} />
+                ))
+              )}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between text-[10px] font-black text-white/40">
+                <span>{displayedServices.length} services · page {smmPage + 1}/{totalPages}</span>
+                <div className="flex gap-2">
+                  <button
+                    disabled={smmPage === 0}
+                    onClick={() => setSmmPage(p => p - 1)}
+                    className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 transition-all"
+                  >← Prev</button>
+                  <button
+                    disabled={smmPage >= totalPages - 1}
+                    onClick={() => setSmmPage(p => p + 1)}
+                    className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 transition-all"
+                  >Next →</button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* ── SETTINGS ───────────────────────────────────────────────────────── */}
       {activeTab === 'settings' && (
         <div className="space-y-4 sm:space-y-6 animate-in slide-in-from-left-4 duration-500">
@@ -954,7 +1334,7 @@ export default function Admin() {
                   if (error) throw error;
                   if (!Array.isArray(data)) throw new Error('Invalid response from sahl-cash-proxy.');
                   // @ts-ignore
-                  const batch = data.filter((p: any) => p.available).map((p: any) => ({ service_id: `sahl_${p.id}`, name: p.name, category: `🎮 ${p.category_name || 'Game Recharge'}`, rate: Number(p.price) * markup, min: p.qty_values?.min ? Number(p.qty_values.min) : 1, max: p.qty_values?.max ? Number(p.qty_values.max) : 1 }));
+                  const batch = data.filter((p: any) => p.available).map((p: any) => ({ service_id: `sahl_${p.id}`, name: p.name, category: `🎮 ${p.category_name || 'Game Recharge'}`, rate: Number(p.price) * markup * 1000, min: p.qty_values?.min ? Number(p.qty_values.min) : 1, max: p.qty_values?.max ? Number(p.qty_values.max) : 1 }));
                   for (let i = 0; i < batch.length; i += 500) {
                     // @ts-ignore
                     const { error: e } = await supabase.from('smm_services').upsert(batch.slice(i, i + 500), { onConflict: 'service_id' });
